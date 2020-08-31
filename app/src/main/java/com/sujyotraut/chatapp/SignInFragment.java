@@ -1,6 +1,7 @@
 package com.sujyotraut.chatapp;
 
 import android.content.DialogInterface;
+import android.graphics.Color;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -59,10 +60,6 @@ public class SignInFragment extends Fragment {
         Log.d(TAG, "sign: signed in");
     }
 
-    public void forgotPassword(){
-
-    }
-
     public void launchSignUpFragment(){
         if (getFragmentManager() != null) {
             getFragmentManager().beginTransaction()
@@ -102,6 +99,7 @@ public class SignInFragment extends Fragment {
         signUpString.setSpan(signUpSpan, 16, 28, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         signUpTV.setText(signUpString);
         signUpTV.setMovementMethod(LinkMovementMethod.getInstance());
+        signUpTV.setHighlightColor(Color.TRANSPARENT);
 
 
         SpannableString forgotPassString = new SpannableString(getString(R.string.forgot_password));
@@ -109,7 +107,8 @@ public class SignInFragment extends Fragment {
             @Override
             public void onClick(@NonNull View widget) {
                 new MaterialAlertDialogBuilder(getContext())
-                        .setTitle("Reset Password")
+                        .setTitle("Reset Password?")
+                        .setMessage("Do you really want to reset your password")
                         .setNegativeButton("No", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
@@ -128,5 +127,6 @@ public class SignInFragment extends Fragment {
         forgotPassString.setSpan(forgotPassSpan, 0, 16, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         forgotPassTV.setText(forgotPassString);
         forgotPassTV.setMovementMethod(LinkMovementMethod.getInstance());
+        forgotPassTV.setHighlightColor(Color.TRANSPARENT);
     }
 }

@@ -1,5 +1,7 @@
 package com.sujyotraut.chatapp;
 
+import android.content.Context;
+import android.graphics.Color;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -14,6 +16,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -53,7 +56,7 @@ public class SignUpFragment extends Fragment {
             Toast.makeText(getContext(), s, Toast.LENGTH_SHORT).show();
         else
             Toast.makeText(getContext(), "Email Field is Empty", Toast.LENGTH_SHORT).show();
-        Log.d(TAG, "sign: signed in");
+        Log.d(TAG, "signUp:");
     }
 
     public void launchSignInFragment(){
@@ -88,5 +91,6 @@ public class SignUpFragment extends Fragment {
 
         signInTV.setText(spannableString);
         signInTV.setMovementMethod(LinkMovementMethod.getInstance());
+        signInTV.setHighlightColor(Color.TRANSPARENT);
     }
 }

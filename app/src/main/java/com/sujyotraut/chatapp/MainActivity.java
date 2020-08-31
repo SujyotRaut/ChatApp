@@ -3,6 +3,8 @@ package com.sujyotraut.chatapp;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.os.CountDownTimer;
+import android.os.Handler;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -11,7 +13,12 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        initViews();
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                initViews();
+            }
+        }, 2000);
     }
 
     public void initViews(){
