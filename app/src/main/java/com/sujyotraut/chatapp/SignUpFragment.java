@@ -15,13 +15,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 
 public class SignUpFragment extends Fragment {
 
     private static final String TAG = "myTag";
-    private TextInputEditText nameEditText, emailEditText, passEditText;
+    private TextInputLayout nameEditText, emailEditText, passEditText;
     private TextView signInTV;
     private Button signUpBtn;
 
@@ -35,22 +37,40 @@ public class SignUpFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_sign_up, container, false);
         initViews(view);
 
+        signUpBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                signUp();
+            }
+        });
 
         return view;
     }
 
+    public void signUp(){
+        String s = emailEditText.getEditText().getText().toString();
+        if (!s.isEmpty())
+            Toast.makeText(getContext(), s, Toast.LENGTH_SHORT).show();
+        else
+            Toast.makeText(getContext(), "Email Field is Empty", Toast.LENGTH_SHORT).show();
+        Log.d(TAG, "sign: signed in");
+    }
+
     public void launchSignInFragment(){
-        getFragmentManager().beginTransaction()
-                .replace(R.id.fragmentContainer, new SignInFragment())
-                .commit();
+        if (getFragmentManager() != null) {
+            getFragmentManager().beginTransaction()
+                    .setCustomAnimations(R.anim.enter_slide_right, R.anim.exit_slide_right)
+                    .replace(R.id.fragmentContainer, new SignInFragment())
+                    .commit();
+        }
     }
 
     public void initViews(View view){
-//        nameEditText = view.findViewById(R.id.nameTextField);
-//        emailEditText = view.findViewById(R.id.emailTextField);
-//        passEditText = view.findViewById(R.id.passwordTextField);
+        nameEditText = view.findViewById(R.id.nameTextField);
+        emailEditText = view.findViewById(R.id.emailTextField);
+        passEditText = view.findViewById(R.id.passwordTextField);
 
-        signInTV = view.findViewById(R.id.signUpTV);
+        signInTV = view.findViewById(R.id.signInTV);
 
         signUpBtn = view.findViewById(R.id.signBtn);
 

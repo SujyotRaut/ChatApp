@@ -7,23 +7,17 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <FrameLayout
+    <TextView
         android:layout_width="match_parent"
-        android:layout_height="208dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/app_name"
-            android:textSize="36sp"
-            android:fontFamily="@font/segoescb"
-            android:layout_gravity="center"/>
-
-    </FrameLayout>
+        android:layout_height="208dp"
+        android:fontFamily="@font/segoescb"
+        android:gravity="bottom|center"
+        android:text="@string/app_name"
+        android:textSize="36sp" />
 
     <FrameLayout
         android:id="@+id/fragmentContainer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="fill_parent" />
 
 </LinearLayout>
