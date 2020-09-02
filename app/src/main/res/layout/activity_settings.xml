@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".activites.SettingsActivity">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/settingsToolbarLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/settingsToolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:navigationIcon="@drawable/ic_arrow_back"
+            app:title="Settings"
+            style="@style/Widget.MaterialComponents.Toolbar.Primary"/>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+
+
+    <FrameLayout
+    android:id="@+id/profileContainer"
+    android:layout_width="match_parent"
+    android:layout_height="72dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:background="?attr/selectableItemBackground"
+    app:layout_constraintTop_toBottomOf="@id/settingsToolbarLayout"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintEnd_toEndOf="parent" />
+
+    <ImageView
+        android:id="@+id/profileIcon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:src="@drawable/ic_profile"
+        app:layout_constraintStart_toStartOf="@id/profileContainer"
+        app:layout_constraintTop_toTopOf="@id/profileContainer" />
+
+    <TextView
+        android:id="@+id/profileTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="16dp"
+        android:text="Profile"
+        android:textColor="@color/black"
+        app:firstBaselineToTopHeight="32dp"
+        app:layout_constraintStart_toEndOf="@id/profileIcon"
+        app:layout_constraintEnd_toEndOf="@id/profileContainer"
+        app:layout_constraintTop_toTopOf="@id/profileContainer"/>
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="16dp"
+        android:text="name, profile picture, gender, etc"
+        app:firstBaselineToTopHeight="20dp"
+        app:layout_constraintStart_toEndOf="@id/profileIcon"
+        app:layout_constraintEnd_toEndOf="@id/profileContainer"
+        app:layout_constraintTop_toBottomOf="@id/profileTitle"/>
+
+
+
+    <FrameLayout
+        android:id="@+id/notificationsContainer"
+        android:layout_width="match_parent"
+        android:layout_height="72dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="?attr/selectableItemBackground"
+        app:layout_constraintTop_toBottomOf="@id/profileContainer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <ImageView
+        android:id="@+id/notificationsIcon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:src="@drawable/ic_notifications"
+        app:layout_constraintStart_toStartOf="@id/notificationsContainer"
+        app:layout_constraintTop_toTopOf="@id/notificationsContainer" />
+
+    <TextView
+        android:id="@+id/notificationsTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="16dp"
+        android:text="Notifications"
+        android:textColor="@color/black"
+        app:firstBaselineToTopHeight="32dp"
+        app:layout_constraintStart_toEndOf="@id/notificationsIcon"
+        app:layout_constraintEnd_toEndOf="@id/notificationsContainer"
+        app:layout_constraintTop_toTopOf="@id/notificationsContainer"/>
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="16dp"
+        android:text="name, profile picture, gender, etc"
+        app:firstBaselineToTopHeight="20dp"
+        app:layout_constraintStart_toEndOf="@id/notificationsIcon"
+        app:layout_constraintEnd_toEndOf="@id/notificationsContainer"
+        app:layout_constraintTop_toBottomOf="@id/notificationsTitle"/>
+
+
+
+    <FrameLayout
+        android:id="@+id/shareContainer"
+        android:layout_width="match_parent"
+        android:layout_height="72dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="?attr/selectableItemBackground"
+        app:layout_constraintTop_toBottomOf="@id/notificationsContainer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <ImageView
+        android:id="@+id/shareIcon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:src="@drawable/ic_share"
+        app:layout_constraintStart_toStartOf="@id/shareContainer"
+        app:layout_constraintTop_toTopOf="@id/shareContainer" />
+
+    <TextView
+        android:id="@+id/shareTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="16dp"
+        android:text="Share"
+        android:textColor="@color/black"
+        app:firstBaselineToTopHeight="32dp"
+        app:layout_constraintStart_toEndOf="@id/shareIcon"
+        app:layout_constraintEnd_toEndOf="@id/shareContainer"
+        app:layout_constraintTop_toTopOf="@id/shareContainer"/>
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="16dp"
+        android:text="name, profile picture, gender, etc"
+        app:firstBaselineToTopHeight="20dp"
+        app:layout_constraintStart_toEndOf="@id/shareIcon"
+        app:layout_constraintEnd_toEndOf="@id/shareContainer"
+        app:layout_constraintTop_toBottomOf="@id/shareTitle"/>
+
+
+
+    <FrameLayout
+        android:id="@+id/aboutContainer"
+        android:layout_width="match_parent"
+        android:layout_height="72dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="?attr/selectableItemBackground"
+        app:layout_constraintTop_toBottomOf="@id/shareContainer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <ImageView
+        android:id="@+id/aboutIcon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:src="@drawable/ic_about"
+        app:layout_constraintStart_toStartOf="@id/aboutContainer"
+        app:layout_constraintTop_toTopOf="@id/aboutContainer" />
+
+    <TextView
+        android:id="@+id/aboutTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="16dp"
+        android:text="About"
+        android:textColor="@color/black"
+        app:firstBaselineToTopHeight="32dp"
+        app:layout_constraintStart_toEndOf="@id/aboutIcon"
+        app:layout_constraintEnd_toEndOf="@id/aboutContainer"
+        app:layout_constraintTop_toTopOf="@id/aboutContainer"/>
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="16dp"
+        android:text="name, profile picture, gender, etc"
+        app:firstBaselineToTopHeight="20dp"
+        app:layout_constraintStart_toEndOf="@id/aboutIcon"
+        app:layout_constraintEnd_toEndOf="@id/aboutContainer"
+        app:layout_constraintTop_toBottomOf="@id/aboutTitle"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

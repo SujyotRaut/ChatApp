@@ -9,7 +9,7 @@
     android:paddingTop="16dp"
     android:layout_gravity="bottom"
     android:orientation="vertical"
-    tools:context=".SignInFragment">
+    tools:context=".fragments.SignInFragment">
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/emailTextField"
