@@ -1,5 +1,6 @@
 package com.sujyotraut.chatapp.fragments;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 
@@ -18,9 +19,25 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirestoreRegistrar;
 import com.sujyotraut.chatapp.R;
+import com.sujyotraut.chatapp.activites.ChatsActivity;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class SignUpFragment extends Fragment {
 
@@ -37,7 +54,14 @@ public class SignUpFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_sign_up, container, false);
+
         initViews(view);
+        signUpBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                signUp();
+            }
+        });
 
         return view;
     }
@@ -45,7 +69,34 @@ public class SignUpFragment extends Fragment {
     private void signUp(){
         if (isFieldsValid()) {
             Log.d(TAG, "signUn: signing up");
-            //sign up
+
+            FirebaseAuth auth =FirebaseAuth.getInstance();
+
+            final String name = nameEditText.getEditText().getText().toString();
+            final String email = emailEditText.getEditText().getText().toString();
+            String pass = passEditText.getEditText().getText().toString();
+            auth.createUserWithEmailAndPassword(email, pass).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                @Override
+                public void onComplete(@NonNull Task<AuthResult> task) {
+                    if (task.isSuccessful()){
+                        FirebaseUser user = task.getResult().getUser();
+                        UserProfileChangeRequest changeRequest = new UserProfileChangeRequest.Builder()
+                                .setDisplayName(name)
+                                .build();
+                        user.updateProfile(changeRequest);
+
+                        Map<String, String> map = new HashMap<>();
+                        map.put("name", name);
+                        map.put("email", user.getEmail());
+
+                        FirebaseFirestore db = FirebaseFirestore.getInstance();
+                        CollectionReference usersRef = db.collection("users");
+                        usersRef.document(user.getUid()).set(map);
+                    } else {
+                        Toast.makeText(getContext(), "Sign Up Failed", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
         }
     }
 
@@ -90,6 +141,7 @@ public class SignUpFragment extends Fragment {
     }
 
     private void initViews(View view){
+
         nameEditText = view.findViewById(R.id.nameTextField);
         emailEditText = view.findViewById(R.id.emailTextField);
         passEditText = view.findViewById(R.id.passwordTextField);
@@ -97,12 +149,6 @@ public class SignUpFragment extends Fragment {
         signInTV = view.findViewById(R.id.signInTV);
 
         signUpBtn = view.findViewById(R.id.signBtn);
-        signUpBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                signUp();
-            }
-        });
 
         String signUpString = getString(R.string.sign_in_text);
         SpannableString spannableString = new SpannableString(signUpString);

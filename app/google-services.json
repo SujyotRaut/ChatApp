@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "863669371823",
+    "firebase_url": "https://chat-app-12cf3.firebaseio.com",
+    "project_id": "chat-app-12cf3",
+    "storage_bucket": "chat-app-12cf3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:863669371823:android:729f686533c66a38bf255a",
+        "android_client_info": {
+          "package_name": "com.sujyotraut.chatapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "863669371823-bq512bfn9tk76pa0ctc30t89bf2f5553.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAzg-gAmWSNimY37VOXFP76-_Mps1rBkoM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "863669371823-bq512bfn9tk76pa0ctc30t89bf2f5553.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

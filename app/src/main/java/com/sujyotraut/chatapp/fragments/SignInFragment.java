@@ -20,9 +20,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
 import com.sujyotraut.chatapp.R;
 import com.sujyotraut.chatapp.activites.ChatsActivity;
 
@@ -42,6 +47,13 @@ public class SignInFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_sign_in, container, false);
         initViews(view);
 
+        signInBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                signIn();
+            }
+        });
+
         return view;
     }
 
@@ -49,9 +61,19 @@ public class SignInFragment extends Fragment {
         if (isFieldsValid()) {
             Log.d(TAG, "signIn: signing in");
             //sign in
-
-            //if sign in successful
-            launchChatsActivity();
+            FirebaseAuth.getInstance().signInWithEmailAndPassword(emailEditText.getEditText().getText().toString(),
+                    passEditText.getEditText().getText().toString())
+                    .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
+                        @Override
+                        public void onSuccess(AuthResult authResult) {
+                            launchChatsActivity();
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Toast.makeText(getContext(), "Sign In Failed", Toast.LENGTH_SHORT).show();
+                }
+            });
         }
     }
 
@@ -135,12 +157,6 @@ public class SignInFragment extends Fragment {
         TextView signUpTV = view.findViewById(R.id.signUpTV);
 
         signInBtn = view.findViewById(R.id.signBtn);
-        signInBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                signIn();
-            }
-        });
 
         SpannableString signUpString = new SpannableString(getString(R.string.sign_up_text));
         ClickableSpan signUpSpan = new ClickableSpan() {
