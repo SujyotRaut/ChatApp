@@ -39,7 +39,7 @@ public class ChatsRecyclerAdapter extends RecyclerView.Adapter<ChatsRecyclerAdap
     public void onBindViewHolder(@NonNull ChatsViewHolder holder, int position) {
         String name, lastMsg;
         int unseenMsgCount;
-        Timestamp lastMsgTime;
+        String lastMsgTime;
 
         name = chatModelList.get(position).getChatName();
         lastMsg = chatModelList.get(position).getLastMsg();

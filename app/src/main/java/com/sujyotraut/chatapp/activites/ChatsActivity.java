@@ -4,23 +4,19 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
-import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
@@ -28,18 +24,16 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
-import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.Transaction;
 import com.sujyotraut.chatapp.R;
 import com.sujyotraut.chatapp.adapters.ChatsRecyclerAdapter;
+import com.sujyotraut.chatapp.database.MyRepo;
 import com.sujyotraut.chatapp.models.ChatModel;
-import com.sujyotraut.chatapp.models.Message;
+import com.sujyotraut.chatapp.models.MyViewModel;
 
-import java.sql.Time;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,9 +43,13 @@ public class ChatsActivity extends AppCompatActivity {
 
     private Toolbar topAppBar;
     private RecyclerView chatsRecyclerView;
+    private ChatsRecyclerAdapter adapter;
     private FloatingActionButton addChatFab;
 
     private FirebaseFirestore db;
+    private List<ChatModel> chatModels;
+    private MyViewModel myViewModel;
+    private MyRepo myRepo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +57,7 @@ public class ChatsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_chats);
 
         final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
         if (user == null){
             Intent intent = new Intent(ChatsActivity.this, MainActivity.class);
             Log.d(TAG, "intent created");
@@ -69,11 +68,50 @@ public class ChatsActivity extends AppCompatActivity {
         }
 
         initViews();
-        
+
+        chatModels = new ArrayList<>();
+        adapter = new ChatsRecyclerAdapter(chatModels);
+        chatsRecyclerView.setAdapter(adapter);
+
+        myRepo = new MyRepo(getApplication());
+        myRepo.getAllChats().observe(this, new Observer<List<ChatModel>>() {
+            @Override
+            public void onChanged(List<ChatModel> list) {
+                Log.d(TAG, "onChanged: data is changed");
+                chatModels.clear();
+                chatModels.addAll(list);
+                adapter.notifyDataSetChanged();
+            }
+        });
+
+//        myViewModel = new ViewModelProvider(this).get(MyViewModel.class);
+//        myViewModel.getAllChat().observe(this, new Observer<List<ChatModel>>() {
+//            @Override
+//            public void onChanged(List<ChatModel> list) {
+//                Log.d(TAG, "onChanged: data is changed in room database");
+//            }
+//        });
+
+        transaction();
+
+    }
+
+    public static String getCompoundId(String targetId){
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user.getUid().compareTo(targetId) <= 0){
+            return  user.getUid() + targetId;
+        }else {
+            return targetId + user.getUid();
+        }
+    }
+
+    private void transaction(){
+
+        final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
         final CollectionReference usersRef = db.collection("users");
         final CollectionReference chatsRef = db.collection("chats");
         final DocumentReference currentUserRef = usersRef.document(user.getUid());
-
 
         db.runTransaction(new Transaction.Function<List<ChatModel>>() {
             @Nullable
@@ -109,11 +147,13 @@ public class ChatsActivity extends AppCompatActivity {
                         DocumentSnapshot chatSnapshot = transaction.get(usersRef.document(chatId));
                         String chatName = chatSnapshot.getString("name");
                         Uri profilePicture = ((Uri) chatSnapshot.get("profilePicture"));
+                        String time = lastMsgTime == null ? "" : lastMsgTime.toString();
+                        String dp = profilePicture == null ? "" : profilePicture.toString();
 
-                        ChatModel chatModel = new ChatModel(chatName);
-                        chatModel.setProfilePicture(profilePicture);
+                        ChatModel chatModel = new ChatModel(chatSnapshot.getId(), chatName);
+                        chatModel.setProfilePicture(dp);
                         chatModel.setLastMsg(lastMsg);
-                        chatModel.setLastMsgTime(lastMsgTime);
+                        chatModel.setLastMsgTime(time);
                         chatModel.setUnseenMsgCount(unseenMsgCount);
 
                         chatModels.add(chatModel);
@@ -130,22 +170,14 @@ public class ChatsActivity extends AppCompatActivity {
             public void onComplete(@NonNull Task<List<ChatModel>> task) {
                 if (task.isSuccessful()){
                     Log.d(TAG, "successful");
-                    ChatsRecyclerAdapter adapter = new ChatsRecyclerAdapter(task.getResult());
-                    chatsRecyclerView.setAdapter(adapter);
+                    myRepo.insertAll(task.getResult());
+//                    myViewModel.insertAll(task.getResult());
                 } else {
                     Log.d(TAG, task.getException().toString());
                 }
             }
         });
-    }
 
-    public static String getCompoundId(String targetId){
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user.getUid().compareTo(targetId) <= 0){
-            return  user.getUid() + targetId;
-        }else {
-            return targetId + user.getUid();
-        }
     }
 
     private void initViews(){

@@ -2,25 +2,36 @@ package com.sujyotraut.chatapp.models;
 
 import android.net.Uri;
 
+import androidx.annotation.NonNull;
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
+
 import com.google.firebase.Timestamp;
 import com.sujyotraut.chatapp.R;
 
+import javax.annotation.Nonnull;
+
+@Entity(tableName = "chats")
 public class ChatModel {
 
+    @NonNull
+    @PrimaryKey
+    private String id;
     private String chatName;
     private String lastMsg;
     private int unseenMsgCount;
-    private Timestamp lastMsgTime;
-    private Uri profilePicture;
+    private String lastMsgTime;
+    private String profilePicture;
 
-    public ChatModel(String chatName){
+    public ChatModel(String id, String chatName){
 
         if (!chatName.isEmpty()) {this.chatName = chatName;}
         else {this.chatName = "nun";}
 
         this.lastMsg = "nun";
-        this.lastMsgTime = Timestamp.now();
+        this.lastMsgTime = "nun";
         this.unseenMsgCount = 0;
+        this.id = id;
     }
 
     public void setChatName(String chatName) {
@@ -41,13 +52,13 @@ public class ChatModel {
         }
     }
 
-    public void setLastMsgTime(Timestamp lastMsgTime) {
+    public void setLastMsgTime(String lastMsgTime) {
         if (chatName != null){
             this.lastMsgTime = lastMsgTime;
         }
     }
 
-    public void setProfilePicture(Uri profilePicture) {
+    public void setProfilePicture(String profilePicture) {
         if (chatName != null){
             this.profilePicture = profilePicture;
         }
@@ -65,11 +76,19 @@ public class ChatModel {
         return unseenMsgCount;
     }
 
-    public Timestamp getLastMsgTime() {
+    public String getLastMsgTime() {
         return lastMsgTime;
     }
 
-    public Uri getProfilePicture() {
+    public String getProfilePicture() {
         return profilePicture;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 }
