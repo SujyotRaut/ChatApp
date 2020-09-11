@@ -1,5 +1,8 @@
 package com.sujyotraut.chatapp.adapters;
 
+import android.icu.text.RelativeDateTimeFormatter;
+import android.net.Uri;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,9 +12,16 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.Timestamp;
+import com.google.type.TimeOfDay;
 import com.sujyotraut.chatapp.R;
-import com.sujyotraut.chatapp.models.ChatModel;
+import com.sujyotraut.chatapp.activites.MainActivity;
+import com.sujyotraut.chatapp.models.Chat;
 
+import java.sql.Time;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.Calendar;
 import java.util.List;
 
@@ -19,9 +29,10 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 public class ChatsRecyclerAdapter extends RecyclerView.Adapter<ChatsRecyclerAdapter.ChatsViewHolder> {
 
-    private List<ChatModel> chatModelList;
+    private List<Chat> chatModelList;
+    private View.OnClickListener mClickListener;
 
-    public ChatsRecyclerAdapter(List<ChatModel> chatModelList){
+    public ChatsRecyclerAdapter(List<Chat> chatModelList){
         this.chatModelList = chatModelList;
     }
 
@@ -38,18 +49,42 @@ public class ChatsRecyclerAdapter extends RecyclerView.Adapter<ChatsRecyclerAdap
     @Override
     public void onBindViewHolder(@NonNull ChatsViewHolder holder, int position) {
         String name, lastMsg;
+        Timestamp lastMsgTimestamp;
+        Uri profilePicture;
         int unseenMsgCount;
-        String lastMsgTime;
 
         name = chatModelList.get(position).getChatName();
         lastMsg = chatModelList.get(position).getLastMsg();
-        lastMsgTime = chatModelList.get(position).getLastMsgTime();
+        lastMsgTimestamp = chatModelList.get(position).getLastMsgTime();
         unseenMsgCount = chatModelList.get(position).getUnseenMsgCount();
+
+        DateFormat dateFormat = new SimpleDateFormat("hh:mm a");
+        DateFormat dateFormat1 = new SimpleDateFormat("DD/MM/YY");
+        int diff = (int) (Timestamp.now().getSeconds() - lastMsgTimestamp.getSeconds());
+        int diffInHours = diff / 3600;
+
+        String lastMsgTime = "";
+        if (diff < 60){
+            lastMsgTime = "just now";
+        }else if (diffInHours < 24){
+            lastMsgTime = dateFormat.format(lastMsgTimestamp.toDate());
+        }else if (diffInHours < 48){
+            lastMsgTime = "yesterday";
+        }else {
+            lastMsgTime = dateFormat1.format(lastMsgTimestamp.toDate());
+        }
 
         holder.nameTv.setText(name);
         holder.lastMsgTv.setText(lastMsg);
-        holder.lastMsgTimeTv.setText("nun");
+        holder.lastMsgTimeTv.setText(lastMsgTime);
         holder.unseenMsgCountTv.setText(String.valueOf(unseenMsgCount));
+
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(MainActivity.TAG, "onClick: ");
+            }
+        });
     }
 
     @Override
@@ -70,10 +105,5 @@ public class ChatsRecyclerAdapter extends RecyclerView.Adapter<ChatsRecyclerAdap
             unseenMsgCountTv = itemView.findViewById(R.id.unseenMsgCountTv);
             profileImageView = itemView.findViewById(R.id.chatProfileImageView);
         }
-    }
-
-    public void change(List<ChatModel> list){
-        chatModelList = list;
-        notifyDataSetChanged();
     }
 }

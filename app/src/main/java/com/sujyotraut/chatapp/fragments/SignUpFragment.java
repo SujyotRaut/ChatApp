@@ -1,6 +1,5 @@
 package com.sujyotraut.chatapp.fragments;
 
-import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 
@@ -22,8 +21,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.AuthResult;
@@ -32,9 +29,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirestoreRegistrar;
 import com.sujyotraut.chatapp.R;
-import com.sujyotraut.chatapp.activites.ChatsActivity;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -54,8 +49,8 @@ public class SignUpFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_sign_up, container, false);
-
         initViews(view);
+
         signUpBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -75,6 +70,7 @@ public class SignUpFragment extends Fragment {
             final String name = nameEditText.getEditText().getText().toString();
             final String email = emailEditText.getEditText().getText().toString();
             String pass = passEditText.getEditText().getText().toString();
+
             auth.createUserWithEmailAndPassword(email, pass).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
                 @Override
                 public void onComplete(@NonNull Task<AuthResult> task) {
@@ -92,7 +88,12 @@ public class SignUpFragment extends Fragment {
                         FirebaseFirestore db = FirebaseFirestore.getInstance();
                         CollectionReference usersRef = db.collection("users");
                         usersRef.document(user.getUid()).set(map);
+
+                        Log.d(TAG, "onComplete: sign up successful");
+                        launchSetUpProfileFragment();
+
                     } else {
+                        Log.d(TAG, "onComplete: sign up failed");
                         Toast.makeText(getContext(), "Sign Up Failed", Toast.LENGTH_SHORT).show();
                     }
                 }
@@ -136,6 +137,15 @@ public class SignUpFragment extends Fragment {
             getFragmentManager().beginTransaction()
                     .setCustomAnimations(R.anim.enter_slide_right, R.anim.exit_slide_right)
                     .replace(R.id.fragmentContainer, new SignInFragment())
+                    .commit();
+        }
+    }
+
+    private void launchSetUpProfileFragment(){
+        if (getFragmentManager() != null) {
+            getFragmentManager().beginTransaction()
+                    .setCustomAnimations(R.anim.enter_slide_left, R.anim.exit_slide_left)
+                    .replace(R.id.fragmentContainer, new SetUpProfileFragment())
                     .commit();
         }
     }

@@ -25,4 +25,6 @@
     <string name="developer_name">developer_name</string>
     <string name="version">Version</string>
     <string name="version_num">version_num</string>
+    <string name="user_name">User Name</string>
+    <string name="default_status">Hello World</string>
 </resources>

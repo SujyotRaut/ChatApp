@@ -22,14 +22,17 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.sujyotraut.chatapp.R;
 import com.sujyotraut.chatapp.activites.ChatsActivity;
+import com.sujyotraut.chatapp.activites.MainActivity;
 
 public class SignInFragment extends Fragment {
 
@@ -61,17 +64,22 @@ public class SignInFragment extends Fragment {
         if (isFieldsValid()) {
             Log.d(TAG, "signIn: signing in");
             //sign in
-            FirebaseAuth.getInstance().signInWithEmailAndPassword(emailEditText.getEditText().getText().toString(),
-                    passEditText.getEditText().getText().toString())
-                    .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
-                        @Override
-                        public void onSuccess(AuthResult authResult) {
-                            launchChatsActivity();
-                        }
-                    }).addOnFailureListener(new OnFailureListener() {
+            String email = emailEditText.getEditText().getText().toString();
+            String password = passEditText.getEditText().getText().toString();
+
+            FirebaseAuth auth = FirebaseAuth.getInstance();
+            auth.signInWithEmailAndPassword(email, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
                 @Override
-                public void onFailure(@NonNull Exception e) {
-                    Toast.makeText(getContext(), "Sign In Failed", Toast.LENGTH_SHORT).show();
+                public void onComplete(@NonNull Task<AuthResult> task) {
+                    if (task.isSuccessful()){
+                        Log.d(TAG, "onSuccess: clicked");
+                        Intent intent = new Intent(getContext(), ChatsActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        startActivity(intent);
+                    }else {
+                        Log.d(TAG, "onComplete: sign in failed");
+                        Toast.makeText(getContext(), "Sign In Failed", Toast.LENGTH_SHORT).show();
+                    }
                 }
             });
         }
@@ -99,11 +107,6 @@ public class SignInFragment extends Fragment {
         } else {
             return true;
         }
-    }
-
-    private void launchChatsActivity() {
-        Intent intent = new Intent(getContext(), ChatsActivity.class);
-        startActivity(intent);
     }
 
     private void launchSignUpFragment(){
@@ -191,7 +194,6 @@ public class SignInFragment extends Fragment {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                Log.d(TAG, "onTextChanged: ");
                 emailEditText.setErrorEnabled(false);
             }
 

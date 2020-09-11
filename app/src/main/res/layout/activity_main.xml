@@ -8,6 +8,7 @@
     tools:context=".activites.MainActivity">
 
     <TextView
+        android:id="@+id/logoTextView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:fontFamily="@font/segoescb"

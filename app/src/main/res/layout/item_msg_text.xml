@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:padding="8dp"
+    android:background="@drawable/bg_msg"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/msgTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="efefeffeYo"
+        android:textSize="18sp"
+        android:textColor="@color/black"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <TextView
+        android:id="@+id/timeTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="4dp"
+        android:text="5 am"
+        android:textSize="12sp"
+        app:layout_constraintEnd_toStartOf="@id/tickImageView"
+        app:layout_constraintBottom_toBottomOf="@id/tickImageView" />
+
+    <ImageView
+        android:id="@+id/tickImageView"
+        android:layout_width="16sp"
+        android:layout_height="16sp"
+        android:layout_marginTop="2dp"
+        android:src="@drawable/ic_double_tick_24px"
+        app:layout_constraintTop_toBottomOf="@id/msgTextView"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

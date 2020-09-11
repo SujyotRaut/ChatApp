@@ -4,9 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
@@ -14,6 +12,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -24,17 +23,19 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.firestore.Transaction;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 import com.sujyotraut.chatapp.R;
 import com.sujyotraut.chatapp.adapters.ChatsRecyclerAdapter;
 import com.sujyotraut.chatapp.database.MyRepo;
-import com.sujyotraut.chatapp.models.ChatModel;
-import com.sujyotraut.chatapp.models.MyViewModel;
+import com.sujyotraut.chatapp.models.Chat;
 
-import java.util.ArrayList;
+import java.io.File;
 import java.util.List;
 
 public class ChatsActivity extends AppCompatActivity {
@@ -47,14 +48,15 @@ public class ChatsActivity extends AppCompatActivity {
     private FloatingActionButton addChatFab;
 
     private FirebaseFirestore db;
-    private List<ChatModel> chatModels;
-    private MyViewModel myViewModel;
+    private List<Chat> chats;
     private MyRepo myRepo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chats);
+
+        Log.d(TAG, "onCreate: chat activity");
 
         final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
@@ -69,34 +71,38 @@ public class ChatsActivity extends AppCompatActivity {
 
         initViews();
 
-        chatModels = new ArrayList<>();
-        adapter = new ChatsRecyclerAdapter(chatModels);
-        chatsRecyclerView.setAdapter(adapter);
-
-        myRepo = new MyRepo(getApplication());
-        myRepo.getAllChats().observe(this, new Observer<List<ChatModel>>() {
+        myRepo.getAllChats().observe(ChatsActivity.this, new Observer<List<Chat>>() {
             @Override
-            public void onChanged(List<ChatModel> list) {
-                Log.d(TAG, "onChanged: data is changed");
-                chatModels.clear();
-                chatModels.addAll(list);
-                adapter.notifyDataSetChanged();
+            public void onChanged(List<Chat> chats) {
+                adapter = new ChatsRecyclerAdapter(chats);
+                chatsRecyclerView.setAdapter(adapter);
             }
         });
 
-//        myViewModel = new ViewModelProvider(this).get(MyViewModel.class);
-//        myViewModel.getAllChat().observe(this, new Observer<List<ChatModel>>() {
-//            @Override
-//            public void onChanged(List<ChatModel> list) {
-//                Log.d(TAG, "onChanged: data is changed in room database");
-//            }
-//        });
+        DocumentReference currentUserRef = db.collection("users").document(user.getUid());
+        currentUserRef.addSnapshotListener(ChatsActivity.this, new EventListener<DocumentSnapshot>() {
+            @Override
+            public void onEvent(@Nullable DocumentSnapshot value, @Nullable FirebaseFirestoreException error) {
+                List<String> chats = ((List<String>) value.get("chats"));
+                if (chats != null){
+                    for (String chat: chats) {
+                        updateChat(chat);
+                    }
+                }
+            }
+        });
 
-        transaction();
+        addChatFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(ChatsActivity.this, AddChatsActivity.class);
+                startActivity(intent);
+            }
+        });
 
     }
 
-    public static String getCompoundId(String targetId){
+    public static String getConversationId(String targetId){
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user.getUid().compareTo(targetId) <= 0){
             return  user.getUid() + targetId;
@@ -105,89 +111,58 @@ public class ChatsActivity extends AppCompatActivity {
         }
     }
 
-    private void transaction(){
+    private void updateChat(final String chatId){
 
         final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
         final CollectionReference usersRef = db.collection("users");
-        final CollectionReference chatsRef = db.collection("chats");
-        final DocumentReference currentUserRef = usersRef.document(user.getUid());
+        final CollectionReference conversationsRef = db.collection("conversations");
+        final DocumentReference chatRef = usersRef.document(chatId);
+        final DocumentReference conversationRef = conversationsRef.document(getConversationId(chatId));
 
-        db.runTransaction(new Transaction.Function<List<ChatModel>>() {
+        db.runTransaction(new Transaction.Function<Chat>() {
             @Nullable
             @Override
-            public List<ChatModel> apply(@NonNull Transaction transaction) throws FirebaseFirestoreException {
+            public Chat apply(@NonNull Transaction transaction) throws FirebaseFirestoreException {
+                DocumentSnapshot chatSnapshot = transaction.get(chatRef);
+                DocumentSnapshot conversationSnapshot = transaction.get(conversationRef);
 
-                List<ChatModel> chatModels = new ArrayList<>();
+                Timestamp lastMsgTime = conversationSnapshot.getTimestamp("lastMsgTime");
+                String chatName = chatSnapshot.getString("name");
+                String lastMsg = conversationSnapshot.getString("lastMsg");
+                int unseenMsgCount = (int) conversationSnapshot.get("unseenMsgCount"+user.getUid());
 
-                List<String> list = ((List<String>) transaction.get(currentUserRef).get("chats"));
+                Chat chat = new Chat(chatId);
+                chat.setLastMsgTime(lastMsgTime);
+                chat.setLastMsg(lastMsg);
+                chat.setChatName(chatName);
+                chat.setUnseenMsgCount(unseenMsgCount);
 
-                if (!list.isEmpty()){
-                    for (String chatId: list){
+                return chat;
 
-                        Log.d(TAG, "chatId: " + chatId);
-
-                        DocumentSnapshot snapshot = transaction.get(chatsRef.document(getCompoundId(chatId)));
-                        String lastMsg = snapshot.getString("lastMsg");
-                        Timestamp lastMsgTime = snapshot.getTimestamp("lastMsgTime");
-                        Object o = snapshot.get("unseenMsgCount"+user.getUid());
-                        int unseenMsgCount = 0;
-
-                        if (o != null){
-                            unseenMsgCount = ((int) o);
-                        }
-
-                        String dataSource = snapshot.getMetadata().isFromCache() ? "local cache" : "server";
-
-                        Log.d(TAG, "data from: " + dataSource);
-                        Log.d(TAG, "lastMsg: " + lastMsg);
-                        Log.d(TAG, "lastMsgTime: " + lastMsgTime);
-                        Log.d(TAG, "unseenMsgCount: " + unseenMsgCount);
-
-                        DocumentSnapshot chatSnapshot = transaction.get(usersRef.document(chatId));
-                        String chatName = chatSnapshot.getString("name");
-                        Uri profilePicture = ((Uri) chatSnapshot.get("profilePicture"));
-                        String time = lastMsgTime == null ? "" : lastMsgTime.toString();
-                        String dp = profilePicture == null ? "" : profilePicture.toString();
-
-                        ChatModel chatModel = new ChatModel(chatSnapshot.getId(), chatName);
-                        chatModel.setProfilePicture(dp);
-                        chatModel.setLastMsg(lastMsg);
-                        chatModel.setLastMsgTime(time);
-                        chatModel.setUnseenMsgCount(unseenMsgCount);
-
-                        chatModels.add(chatModel);
-                    }
-                    return chatModels;
-
-                }else {
-                    Log.d(TAG, "list is empty");
-                    return null;
-                }
             }
-        }).addOnCompleteListener(new OnCompleteListener<List<ChatModel>>() {
+        }).addOnCompleteListener(new OnCompleteListener<Chat>() {
             @Override
-            public void onComplete(@NonNull Task<List<ChatModel>> task) {
+            public void onComplete(@NonNull Task<Chat> task) {
                 if (task.isSuccessful()){
-                    Log.d(TAG, "successful");
-                    myRepo.insertAll(task.getResult());
-//                    myViewModel.insertAll(task.getResult());
-                } else {
-                    Log.d(TAG, task.getException().toString());
+                    myRepo.insertChat(task.getResult());
                 }
             }
         });
 
+        File profileDist = new File(getExternalFilesDir("profilePictures"), chatId + ".jpg");
+        FirebaseStorage storage = FirebaseStorage.getInstance();
+        StorageReference profilePicturesRef = storage.getReference("profilePictures");
+        profilePicturesRef.getFile(profileDist);
+
+        adapter.notifyDataSetChanged();
     }
 
     private void initViews(){
 
+        myRepo = new MyRepo(getApplication());
+
         db = FirebaseFirestore.getInstance();
-        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
-                .setPersistenceEnabled(true)
-                .setCacheSizeBytes(FirebaseFirestoreSettings.CACHE_SIZE_UNLIMITED)
-                .build();
-        db.setFirestoreSettings(settings);
 
         addChatFab = findViewById(R.id.addChatsFab);
 

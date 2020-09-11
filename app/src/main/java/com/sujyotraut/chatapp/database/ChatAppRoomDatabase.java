@@ -5,16 +5,20 @@ import android.content.Context;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
+import androidx.room.TypeConverters;
 
-import com.sujyotraut.chatapp.models.ChatModel;
+import com.sujyotraut.chatapp.models.Chat;
+import com.sujyotraut.chatapp.models.User;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-@Database(entities = {ChatModel.class}, version = 1, exportSchema = false)
+@TypeConverters(Converters.class)
+@Database(entities = {Chat.class, User.class}, version = 1, exportSchema = false)
 public abstract class ChatAppRoomDatabase extends RoomDatabase {
 
     public abstract ChatDao chatDao();
+    public abstract UserDao userDao();
 
     private static volatile ChatAppRoomDatabase INSTANCE;
     private static final int NUMBER_OF_THREADS = 4;
