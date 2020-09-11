@@ -4,6 +4,7 @@ import android.net.Uri;
 import androidx.room.TypeConverter;
 
 import com.google.firebase.Timestamp;
+import com.sujyotraut.chatapp.utils.MsgType;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -65,6 +66,40 @@ public class Converters {
             return uri.toString();
         }else {
             return null;
+        }
+    }
+
+    @TypeConverter
+    public static MsgType stringToMsgType(String value){
+        if (value == null){
+            return null;
+        }else if (value.equals("TEXT")){
+            return MsgType.TEXT;
+        }else if (value.equals("IMAGE")){
+            return MsgType.IMAGE;
+        }else if (value.equals("VIDEO")){
+            return MsgType.VIDEO;
+        }else if (value.equals("AUDIO")){
+            return MsgType.AUDIO;
+        }else {
+            return MsgType.FILE;
+        }
+    }
+
+    @TypeConverter
+    public static String msgTypeToString(MsgType msgType){
+        if (msgType == null){
+            return null;
+        }else if (msgType == MsgType.TEXT){
+            return "TEXT";
+        }else if (msgType == MsgType.IMAGE){
+            return "IMAGE";
+        }else if (msgType == MsgType.VIDEO){
+            return "VIDEO";
+        }else if (msgType == MsgType.AUDIO){
+            return "AUDIO";
+        }else {
+            return "FILE";
         }
     }
 }

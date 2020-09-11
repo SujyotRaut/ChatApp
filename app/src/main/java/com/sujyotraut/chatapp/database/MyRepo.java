@@ -5,6 +5,7 @@ import android.app.Application;
 import androidx.lifecycle.LiveData;
 
 import com.sujyotraut.chatapp.models.Chat;
+import com.sujyotraut.chatapp.models.Message;
 import com.sujyotraut.chatapp.models.User;
 
 import java.util.List;
@@ -13,6 +14,7 @@ public class MyRepo {
 
     private ChatDao mChatDao;
     private UserDao mUserDao;
+    private MessageDao mMessageDao;
     private LiveData<List<Chat>> allChats;
     private LiveData<List<User>> allUsers;
 
@@ -20,6 +22,7 @@ public class MyRepo {
         ChatAppRoomDatabase db = ChatAppRoomDatabase.getDatabase(application);
         mChatDao = db.chatDao();
         mUserDao = db.userDao();
+        mMessageDao = db.messageDao();
         allChats = mChatDao.getAll();
         allUsers = mUserDao.getAll();
     }
@@ -64,6 +67,28 @@ public class MyRepo {
             @Override
             public void run() {
                 mUserDao.insertAll(users);
+            }
+        });
+    }
+
+    public LiveData<List<Message>> getAllMessages(String conversationId) {
+        return mMessageDao.getAll(conversationId);
+    }
+
+    public void insertMessage(final Message message) {
+        ChatAppRoomDatabase.databaseWriteExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                mMessageDao.insert(message);
+            }
+        });
+    }
+
+    public void insertAllMessages(final List<Message> messages){
+        ChatAppRoomDatabase.databaseWriteExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                mMessageDao.insertAll(messages);
             }
         });
     }

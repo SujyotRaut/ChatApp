@@ -74,18 +74,19 @@ public class ChatsActivity extends AppCompatActivity {
         myRepo.getAllChats().observe(ChatsActivity.this, new Observer<List<Chat>>() {
             @Override
             public void onChanged(List<Chat> chats) {
-                adapter = new ChatsRecyclerAdapter(chats);
+                adapter = new ChatsRecyclerAdapter(ChatsActivity.this, chats);
                 chatsRecyclerView.setAdapter(adapter);
             }
         });
 
         DocumentReference currentUserRef = db.collection("users").document(user.getUid());
-        currentUserRef.addSnapshotListener(ChatsActivity.this, new EventListener<DocumentSnapshot>() {
+        currentUserRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
             @Override
             public void onEvent(@Nullable DocumentSnapshot value, @Nullable FirebaseFirestoreException error) {
                 List<String> chats = ((List<String>) value.get("chats"));
                 if (chats != null){
                     for (String chat: chats) {
+                        Log.d(TAG, "onEvent: " + chat);
                         updateChat(chat);
                     }
                 }
@@ -113,6 +114,7 @@ public class ChatsActivity extends AppCompatActivity {
 
     private void updateChat(final String chatId){
 
+        Log.d(TAG, "updateChat: ");
         final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
         final CollectionReference usersRef = db.collection("users");
@@ -127,16 +129,18 @@ public class ChatsActivity extends AppCompatActivity {
                 DocumentSnapshot chatSnapshot = transaction.get(chatRef);
                 DocumentSnapshot conversationSnapshot = transaction.get(conversationRef);
 
+                Log.d(TAG, "apply: " + Thread.currentThread().getName());
+
                 Timestamp lastMsgTime = conversationSnapshot.getTimestamp("lastMsgTime");
                 String chatName = chatSnapshot.getString("name");
                 String lastMsg = conversationSnapshot.getString("lastMsg");
-                int unseenMsgCount = (int) conversationSnapshot.get("unseenMsgCount"+user.getUid());
+                Log.d(TAG, "apply: " + chatName);
 
                 Chat chat = new Chat(chatId);
                 chat.setLastMsgTime(lastMsgTime);
                 chat.setLastMsg(lastMsg);
                 chat.setChatName(chatName);
-                chat.setUnseenMsgCount(unseenMsgCount);
+                chat.setUnseenMsgCount(5);
 
                 return chat;
 
@@ -145,7 +149,10 @@ public class ChatsActivity extends AppCompatActivity {
             @Override
             public void onComplete(@NonNull Task<Chat> task) {
                 if (task.isSuccessful()){
+                    Log.d(TAG, "chats inserted");
                     myRepo.insertChat(task.getResult());
+                }else {
+                    Log.d(TAG, "chats failed");
                 }
             }
         });

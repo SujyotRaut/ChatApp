@@ -137,44 +137,6 @@ public class MainActivity extends AppCompatActivity {
                 .commit();
     }
 
-    public void testSendMsg(Message msg, String targetId){
-
-        String chatId = ChatsActivity.getConversationId(targetId);
-
-        //storing msg values to a map
-        Map<String, Object> map = new HashMap<>();
-        map.put("lastMsg", msg.getMsg());
-        map.put("lastMsgTime", msg.getTimestamp());
-        map.put("unseenMsgCount"+targetId, FieldValue.increment(1));
-
-        //initializing user and database
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        WriteBatch batch = db.batch();
-
-        //updating chat meta info
-        DocumentReference chatRef = db.collection("chats").document(chatId);
-        batch.set(chatRef, map, SetOptions.merge());
-
-        //sending message
-        DocumentReference msgRef = chatRef.collection("messages").document();
-        batch.set(msgRef, msg);
-
-        //committing atomic batch write operation
-        batch.commit().addOnCompleteListener(new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                if (task.isSuccessful()){
-                    Log.d(TAG, "onComplete: msg sent");
-                }else {
-                    Log.d(TAG, "onComplete: msg not sent");
-                }
-            }
-        });
-
-        Log.d(TAG, "testSendMsg: end");
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);

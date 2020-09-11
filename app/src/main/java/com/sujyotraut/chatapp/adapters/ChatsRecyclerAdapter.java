@@ -1,5 +1,7 @@
 package com.sujyotraut.chatapp.adapters;
 
+import android.content.Context;
+import android.content.Intent;
 import android.icu.text.RelativeDateTimeFormatter;
 import android.net.Uri;
 import android.util.Log;
@@ -14,9 +16,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.firebase.Timestamp;
 import com.google.type.TimeOfDay;
 import com.sujyotraut.chatapp.R;
+import com.sujyotraut.chatapp.activites.ConversationActivity;
 import com.sujyotraut.chatapp.activites.MainActivity;
 import com.sujyotraut.chatapp.models.Chat;
 
+import java.io.File;
 import java.sql.Time;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -29,10 +33,12 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 public class ChatsRecyclerAdapter extends RecyclerView.Adapter<ChatsRecyclerAdapter.ChatsViewHolder> {
 
+    private Context context;
     private List<Chat> chatModelList;
     private View.OnClickListener mClickListener;
 
-    public ChatsRecyclerAdapter(List<Chat> chatModelList){
+    public ChatsRecyclerAdapter(Context context, List<Chat> chatModelList){
+        this.context = context;
         this.chatModelList = chatModelList;
     }
 
@@ -48,11 +54,12 @@ public class ChatsRecyclerAdapter extends RecyclerView.Adapter<ChatsRecyclerAdap
 
     @Override
     public void onBindViewHolder(@NonNull ChatsViewHolder holder, int position) {
-        String name, lastMsg;
+        final String chatId, name, lastMsg;
         Timestamp lastMsgTimestamp;
         Uri profilePicture;
         int unseenMsgCount;
 
+        chatId = chatModelList.get(position).getChatId();
         name = chatModelList.get(position).getChatName();
         lastMsg = chatModelList.get(position).getLastMsg();
         lastMsgTimestamp = chatModelList.get(position).getLastMsgTime();
@@ -79,10 +86,19 @@ public class ChatsRecyclerAdapter extends RecyclerView.Adapter<ChatsRecyclerAdap
         holder.lastMsgTimeTv.setText(lastMsgTime);
         holder.unseenMsgCountTv.setText(String.valueOf(unseenMsgCount));
 
+        File profileImage = new File(context.getExternalFilesDir("profilePictures"), chatId+".jpg");
+        if (profileImage.exists()){
+            holder.profileImageView.setImageURI(Uri.fromFile(profileImage));
+        }
+
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d(MainActivity.TAG, "onClick: ");
+                Intent intent  = new Intent(context, ConversationActivity.class);
+                intent.putExtra("chatId", chatId);
+                intent.putExtra("name", name);
+                intent.putExtra("status", "status");
+                context.startActivity(intent);
             }
         });
     }

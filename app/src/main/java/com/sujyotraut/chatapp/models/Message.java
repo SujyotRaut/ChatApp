@@ -1,49 +1,72 @@
 package com.sujyotraut.chatapp.models;
 
+import androidx.annotation.NonNull;
+import androidx.room.Entity;
 import androidx.room.PrimaryKey;
+
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import java.util.Calendar;
+import com.sujyotraut.chatapp.utils.MsgType;
 
+@Entity(tableName = "messages")
 public class Message {
 
+    @NonNull
     @PrimaryKey
-    private Calendar timestamp;
-    private String chatId;
-    private String msg, senderId;
+    private String msgId;
+    private Timestamp timestamp;
+    private String conversationId;
+    private String msgText, senderId;
+    private MsgType msgType;
     private Boolean seen;
 
-    public Message(String chatId, String msg) {
+    public Message(){
+        //no argument constructor is required for getting message instance from firestore document snapshot
+    }
+
+    public Message(@NonNull String msgId, String conversationId, String msgText) {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        this.chatId = chatId;
-        this.msg = msg;
-        this.timestamp = Calendar.getInstance();
+        this.msgId = msgId;
+        this.conversationId = conversationId;
+        this.msgText = msgText;
+        this.timestamp = Timestamp.now();
         this.senderId = user.getUid();
+        this.msgType = MsgType.TEXT;
         this.seen = false;
     }
 
-    public Calendar getTimestamp() {
+    @NonNull
+    public String getMsgId() {
+        return msgId;
+    }
+
+    public void setMsgId(@NonNull String msgId) {
+        this.msgId = msgId;
+    }
+
+    public Timestamp getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(Calendar timestamp) {
+    public void setTimestamp(Timestamp timestamp) {
         this.timestamp = timestamp;
     }
 
-    public String getChatId() {
-        return chatId;
+    public String getConversationId() {
+        return conversationId;
     }
 
-    public void setChatId(String chatId) {
-        this.chatId = chatId;
+    public void setConversationId(String conversationId) {
+        this.conversationId = conversationId;
     }
 
-    public String getMsg() {
-        return msg;
+    public String getMsgText() {
+        return msgText;
     }
 
-    public void setMsg(String msg) {
-        this.msg = msg;
+    public void setMsgText(String msgText) {
+        this.msgText = msgText;
     }
 
     public String getSenderId() {
@@ -60,5 +83,13 @@ public class Message {
 
     public void setSeen(Boolean seen) {
         this.seen = seen;
+    }
+
+    public MsgType getMsgType() {
+        return msgType;
+    }
+
+    public void setMsgType(MsgType msgType) {
+        this.msgType = msgType;
     }
 }

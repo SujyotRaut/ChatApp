@@ -30,6 +30,7 @@
         android:layout_marginEnd="16dp"
         android:text="Name"
         android:textColor="@color/black"
+        android:maxLines="1"
         app:layout_constraintStart_toEndOf="@id/chatProfileImageView"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toStartOf="@id/lastMsgTimeTv"/>
@@ -42,6 +43,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:text="Last Message"
+        android:maxLines="1"
         app:layout_constraintStart_toEndOf="@id/chatProfileImageView"
         app:layout_constraintTop_toBottomOf="@id/chatNameTv"
         app:layout_constraintEnd_toStartOf="@id/unseenMsgCountTv"/>
@@ -53,6 +55,7 @@
         android:layout_marginTop="19dp"
         android:layout_marginEnd="16dp"
         android:text="Time"
+        android:maxLines="1"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
@@ -63,6 +66,7 @@
         android:layout_marginTop="3dp"
         android:layout_marginEnd="16dp"
         android:text="Msg Count"
+        android:maxLines="1"
         app:layout_constraintTop_toBottomOf="@id/lastMsgTimeTv"
         app:layout_constraintEnd_toEndOf="parent"/>
 

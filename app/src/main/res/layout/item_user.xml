@@ -29,6 +29,7 @@
         android:layout_marginEnd="16dp"
         android:text="Name"
         android:textColor="@color/black"
+        android:maxLines="1"
         app:layout_constraintStart_toEndOf="@id/addChatProfilePicture"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
@@ -41,6 +42,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:text="Status"
+        android:maxLines="1"
         app:layout_constraintStart_toEndOf="@id/addChatProfilePicture"
         app:layout_constraintTop_toBottomOf="@id/addChatNameTv"
         app:layout_constraintEnd_toEndOf="parent"/>

@@ -8,17 +8,19 @@ import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
 import com.sujyotraut.chatapp.models.Chat;
+import com.sujyotraut.chatapp.models.Message;
 import com.sujyotraut.chatapp.models.User;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @TypeConverters(Converters.class)
-@Database(entities = {Chat.class, User.class}, version = 1, exportSchema = false)
+@Database(entities = {Chat.class, User.class, Message.class}, version = 1, exportSchema = false)
 public abstract class ChatAppRoomDatabase extends RoomDatabase {
 
     public abstract ChatDao chatDao();
     public abstract UserDao userDao();
+    public abstract MessageDao messageDao();
 
     private static volatile ChatAppRoomDatabase INSTANCE;
     private static final int NUMBER_OF_THREADS = 4;
