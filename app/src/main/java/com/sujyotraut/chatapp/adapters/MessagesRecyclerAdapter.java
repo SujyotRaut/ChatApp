@@ -1,5 +1,6 @@
 package com.sujyotraut.chatapp.adapters;
 
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -7,6 +8,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -18,6 +20,7 @@ import com.sujyotraut.chatapp.utils.MsgType;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MessagesRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
@@ -29,8 +32,8 @@ public class MessagesRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.V
     private static final int FILE = 23;
     private List<Message> messages;
 
-    public MessagesRecyclerAdapter(List<Message> messages) {
-        this.messages = messages;
+    public MessagesRecyclerAdapter() {
+        this.messages = new ArrayList<>();
     }
 
     @Override
@@ -83,9 +86,16 @@ public class MessagesRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.V
         String date = dateFormat.format(message.getTimestamp().toDate());
         textMsgViewHolder.timeTv.setText(date);
 
+        if (message.getSeen()){
+            textMsgViewHolder.tickImageView.setImageResource(R.drawable.ic_double_tick_24px);
+        }else if (message.getSent()){
+            textMsgViewHolder.tickImageView.setImageResource(R.drawable.ic_tick_24px);
+        }
+
+
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (message.getSenderId().equals(user.getUid())) {
-            ConstraintLayout root = ((ConstraintLayout) holder.itemView);
+
         }
     }
 
@@ -103,6 +113,11 @@ public class MessagesRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.V
             timeTv = itemView.findViewById(R.id.timeTextView);
             tickImageView = itemView.findViewById(R.id.tickImageView);
         }
+    }
+
+    public void setMessages(List<Message> messages){
+        this.messages = messages;
+        notifyDataSetChanged();
     }
 
 }

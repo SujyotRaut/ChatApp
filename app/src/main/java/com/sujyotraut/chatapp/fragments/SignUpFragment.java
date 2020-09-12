@@ -22,6 +22,7 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.progressindicator.ProgressIndicator;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
@@ -38,7 +39,7 @@ public class SignUpFragment extends Fragment {
 
     private static final String TAG = "myTag";
     private TextInputLayout nameEditText, emailEditText, passEditText;
-    private TextView signInTV;
+    private ProgressIndicator progressIndicator;
     private Button signUpBtn;
 
     public SignUpFragment() {
@@ -54,6 +55,8 @@ public class SignUpFragment extends Fragment {
         signUpBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                progressIndicator.show();
+                signUpBtn.setEnabled(false);
                 signUp();
             }
         });
@@ -90,10 +93,14 @@ public class SignUpFragment extends Fragment {
                         usersRef.document(user.getUid()).set(map);
 
                         Log.d(TAG, "onComplete: sign up successful");
+                        progressIndicator.hide();
+                        signUpBtn.setEnabled(true);
                         launchSetUpProfileFragment();
 
                     } else {
                         Log.d(TAG, "onComplete: sign up failed");
+                        progressIndicator.hide();
+                        signUpBtn.setEnabled(true);
                         Toast.makeText(getContext(), "Sign Up Failed", Toast.LENGTH_SHORT).show();
                     }
                 }
@@ -156,9 +163,10 @@ public class SignUpFragment extends Fragment {
         emailEditText = view.findViewById(R.id.emailTextField);
         passEditText = view.findViewById(R.id.passwordTextField);
 
-        signInTV = view.findViewById(R.id.signInTV);
-
         signUpBtn = view.findViewById(R.id.signBtn);
+        progressIndicator = getActivity().findViewById(R.id.progressIndicator);
+
+        TextView signInTV = view.findViewById(R.id.signInTV);
 
         String signUpString = getString(R.string.sign_in_text);
         SpannableString spannableString = new SpannableString(signUpString);

@@ -15,18 +15,21 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.Transaction;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -36,6 +39,10 @@ import com.sujyotraut.chatapp.database.MyRepo;
 import com.sujyotraut.chatapp.models.Chat;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 
 public class ChatsActivity extends AppCompatActivity {
@@ -48,7 +55,7 @@ public class ChatsActivity extends AppCompatActivity {
     private FloatingActionButton addChatFab;
 
     private FirebaseFirestore db;
-    private List<Chat> chats;
+    private FirebaseUser user;
     private MyRepo myRepo;
 
     @Override
@@ -58,11 +65,10 @@ public class ChatsActivity extends AppCompatActivity {
 
         Log.d(TAG, "onCreate: chat activity");
 
-        final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        user = FirebaseAuth.getInstance().getCurrentUser();
 
         if (user == null){
             Intent intent = new Intent(ChatsActivity.this, MainActivity.class);
-            Log.d(TAG, "intent created");
             startActivity(intent);
             Log.d(TAG, "Main activity started");
             finish();
@@ -74,8 +80,7 @@ public class ChatsActivity extends AppCompatActivity {
         myRepo.getAllChats().observe(ChatsActivity.this, new Observer<List<Chat>>() {
             @Override
             public void onChanged(List<Chat> chats) {
-                adapter = new ChatsRecyclerAdapter(ChatsActivity.this, chats);
-                chatsRecyclerView.setAdapter(adapter);
+                adapter.setChats(chats);
             }
         });
 
@@ -83,11 +88,14 @@ public class ChatsActivity extends AppCompatActivity {
         currentUserRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
             @Override
             public void onEvent(@Nullable DocumentSnapshot value, @Nullable FirebaseFirestoreException error) {
-                List<String> chats = ((List<String>) value.get("chats"));
-                if (chats != null){
-                    for (String chat: chats) {
-                        Log.d(TAG, "onEvent: " + chat);
-                        updateChat(chat);
+                Log.d(TAG, "onEvent: user document changed");
+                Log.d(TAG, "error: " + error);
+                if (error == null){
+                    List<String> chatIds = ((List<String>) value.get("chats"));
+                    if (chatIds != null){
+                        for (String chatId: chatIds) {
+                            updateChat(chatId);
+                        }
                     }
                 }
             }
@@ -100,7 +108,6 @@ public class ChatsActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-
     }
 
     public static String getConversationId(String targetId){
@@ -114,9 +121,6 @@ public class ChatsActivity extends AppCompatActivity {
 
     private void updateChat(final String chatId){
 
-        Log.d(TAG, "updateChat: ");
-        final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-
         final CollectionReference usersRef = db.collection("users");
         final CollectionReference conversationsRef = db.collection("conversations");
         final DocumentReference chatRef = usersRef.document(chatId);
@@ -129,18 +133,20 @@ public class ChatsActivity extends AppCompatActivity {
                 DocumentSnapshot chatSnapshot = transaction.get(chatRef);
                 DocumentSnapshot conversationSnapshot = transaction.get(conversationRef);
 
-                Log.d(TAG, "apply: " + Thread.currentThread().getName());
-
                 Timestamp lastMsgTime = conversationSnapshot.getTimestamp("lastMsgTime");
                 String chatName = chatSnapshot.getString("name");
                 String lastMsg = conversationSnapshot.getString("lastMsg");
-                Log.d(TAG, "apply: " + chatName);
+                int unseenMsgCount = 0;
+                Long o = conversationSnapshot.getLong("unseenMsgCount"+user.getUid());
+                if (o != null){
+                    unseenMsgCount = o.intValue();
+                }
 
                 Chat chat = new Chat(chatId);
                 chat.setLastMsgTime(lastMsgTime);
                 chat.setLastMsg(lastMsg);
                 chat.setChatName(chatName);
-                chat.setUnseenMsgCount(5);
+                chat.setUnseenMsgCount(unseenMsgCount);
 
                 return chat;
 
@@ -149,18 +155,49 @@ public class ChatsActivity extends AppCompatActivity {
             @Override
             public void onComplete(@NonNull Task<Chat> task) {
                 if (task.isSuccessful()){
-                    Log.d(TAG, "chats inserted");
+                    Log.d(TAG, "chat updated: " + task.getResult().getChatName());
                     myRepo.insertChat(task.getResult());
                 }else {
-                    Log.d(TAG, "chats failed");
+                    Log.d(TAG, "chat update failed: " + task.getResult().getChatName());
                 }
             }
         });
 
-        File profileDist = new File(getExternalFilesDir("profilePictures"), chatId + ".jpg");
-        FirebaseStorage storage = FirebaseStorage.getInstance();
-        StorageReference profilePicturesRef = storage.getReference("profilePictures");
-        profilePicturesRef.getFile(profileDist);
+        final File distFile = new File(getExternalFilesDir("profilePictures"), chatId+".jpg");
+        if (!distFile.exists()){
+            long ONE_MEGABYTE = 1024*1024;
+            FirebaseStorage storage = FirebaseStorage.getInstance();
+            StorageReference profilePicturesRef = storage.getReference("profilePictures");
+            profilePicturesRef.child(distFile.getName()).getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+                @Override
+                public void onSuccess(byte[] bytes) {
+                    try (OutputStream stream = new FileOutputStream(distFile);) {
+                        stream.write(bytes);
+                        stream.flush();
+                        adapter.notifyDataSetChanged();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+        }
+
+        conversationRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
+            @Override
+            public void onEvent(@Nullable DocumentSnapshot value, @Nullable FirebaseFirestoreException error) {
+                Log.d(TAG, "msg updated");
+                String lastMsg = value.getString("lastMsg");
+                Timestamp lastMsgTime = value.getTimestamp("lastMsgTime");
+                Long l = value.getLong("unseenMsgCount"+user.getUid());
+                int unseenMsgCount = 0;
+                if (l != null){
+                    unseenMsgCount = l.intValue();
+                }
+
+                myRepo.updateChat(chatId, lastMsg, lastMsgTime, unseenMsgCount);
+                adapter.notifyDataSetChanged();
+            }
+        });
 
         adapter.notifyDataSetChanged();
     }
@@ -174,6 +211,8 @@ public class ChatsActivity extends AppCompatActivity {
         addChatFab = findViewById(R.id.addChatsFab);
 
         chatsRecyclerView = findViewById(R.id.chatsRecyclerView);
+        adapter = new ChatsRecyclerAdapter(ChatsActivity.this);
+        chatsRecyclerView.setAdapter(adapter);
 
         topAppBar = findViewById(R.id.topAppBar);
 

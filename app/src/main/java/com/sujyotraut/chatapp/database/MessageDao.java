@@ -18,6 +18,9 @@ public interface MessageDao {
     @Query("SELECT * FROM messages WHERE conversationId = :conversationId ORDER BY timestamp ASC")
     LiveData<List<Message>> getAll(String conversationId);
 
+    @Query("SELECT COUNT(*) FROM messages")
+    int getMessagesCount();
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<Message> messages);
 

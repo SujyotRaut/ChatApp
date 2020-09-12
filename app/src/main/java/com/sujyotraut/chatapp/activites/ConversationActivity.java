@@ -6,10 +6,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -48,6 +50,7 @@ public class ConversationActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.TAG;
 
     private FirebaseFirestore db;
+    private FirebaseUser user;
     private EditText msgEditText;
     private RecyclerView messagesRecyclerView;
 
@@ -61,15 +64,35 @@ public class ConversationActivity extends AppCompatActivity {
 
         initViews();
 
-        messagesRecyclerView.setAdapter(adapter);
-
         String chatId = getIntent().getStringExtra("chatId");
         String conversationId = ChatsActivity.getConversationId(chatId);
         myRepo.getAllMessages(conversationId).observe(ConversationActivity.this, new Observer<List<Message>>() {
             @Override
             public void onChanged(List<Message> messages) {
-                adapter = new MessagesRecyclerAdapter(messages);
-                messagesRecyclerView.setAdapter(adapter);
+                adapter.setMessages(messages);
+                messagesRecyclerView.smoothScrollToPosition(messages.size()-1);
+
+                String chatId = getIntent().getStringExtra("chatId");
+                String conversationId = ChatsActivity.getConversationId(chatId);
+                CollectionReference conversationsRef = db.collection("conversations");
+                DocumentReference conversationRef = conversationsRef.document(conversationId);
+                conversationRef.update("unseenMsgCount"+user.getUid(), 0);
+
+                CollectionReference messagesRef = conversationsRef.document(conversationId).collection("messages");
+                messagesRef.whereEqualTo("senderId", chatId)
+                        .addSnapshotListener(ConversationActivity.this, new EventListener<QuerySnapshot>() {
+                            @Override
+                            public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
+                                if (error == null){
+                                    List<DocumentChange> changes = value.getDocumentChanges();
+                                    if (!changes.isEmpty()){
+                                        for (DocumentChange change: changes){
+                                            change.getDocument().getReference().update("seen", true);
+                                        }
+                                    }
+                                }
+                            }
+                        });
             }
         });
 
@@ -100,9 +123,7 @@ public class ConversationActivity extends AppCompatActivity {
         String msgText = msgEditText.getText().toString();
         if (!msgText.isEmpty()){
 
-            //initializing user and database
-            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            //initializing batch
             WriteBatch batch = db.batch();
 
             String chatId = getIntent().getStringExtra("chatId");
@@ -115,7 +136,8 @@ public class ConversationActivity extends AppCompatActivity {
             DocumentReference msgRef = conversationRef.collection("messages").document();
             msgId = msgRef.getId();
 
-            Message msg = new Message(msgId, conversationId, msgText);
+            final Message msg = new Message(msgId, conversationId, msgText);
+            msg.setSent(true);
 
             //storing last msg values to a map
             Map<String, Object> map = new HashMap<>();
@@ -143,6 +165,11 @@ public class ConversationActivity extends AppCompatActivity {
                     }
                 }
             });
+
+            myRepo.insertMessage(msg);
+            msgEditText.getText().clear();
+            InputMethodManager imm = ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE));
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
     }
 
@@ -155,10 +182,14 @@ public class ConversationActivity extends AppCompatActivity {
         TextView nameTv = findViewById(R.id.nameTextView);
         TextView statusTv = findViewById(R.id.statusTextView);
         msgEditText = findViewById(R.id.msgEditText);
-        messagesRecyclerView = findViewById(R.id.messagesRecyclerView);
 
         myRepo = new MyRepo(getApplication());
+        user = FirebaseAuth.getInstance().getCurrentUser();
         db = FirebaseFirestore.getInstance();
+
+        adapter = new MessagesRecyclerAdapter();
+        messagesRecyclerView = findViewById(R.id.messagesRecyclerView);
+        messagesRecyclerView.setAdapter(adapter);
 
         String chatId = getIntent().getStringExtra("chatId");
         String name = getIntent().getStringExtra("name");

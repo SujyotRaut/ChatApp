@@ -2,6 +2,8 @@ package com.sujyotraut.chatapp.adapters;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,6 +20,7 @@ import com.sujyotraut.chatapp.activites.ConversationActivity;
 import com.sujyotraut.chatapp.models.User;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -27,9 +30,9 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
     private List<User> users;
     private Context context;
 
-    public UsersRecyclerAdapter(Context context, List<User> users) {
+    public UsersRecyclerAdapter(Context context) {
         this.context = context;
-        this.users = users;
+        this.users = new ArrayList<>();
     }
 
     @NonNull
@@ -55,12 +58,16 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
         holder.nameTv.setText(name);
         if (status != null){
             holder.statusTv.setText(status);
+        }else {
+            holder.statusTv.setText(context.getResources().getString(R.string.default_status));
         }
 
-        File profile = new File(context.getExternalFilesDir("profilePictures"), user.getId()+".jpg");
-        if (profile.exists()){
-            Uri uri = Uri.fromFile(profile);
-            holder.profileImageView.setImageURI(uri);
+        File profileImage = new File(context.getExternalFilesDir("profilePictures"), chatId+".jpg");
+        if (profileImage.exists()){
+            Bitmap bitmap = BitmapFactory.decodeFile(profileImage.getAbsolutePath());
+            holder.profileImageView.setImageBitmap(bitmap);
+        }else {
+            holder.profileImageView.setImageResource(R.drawable.default_profile);
         }
 
         holder.itemView.setOnClickListener(new View.OnClickListener() {
@@ -91,5 +98,10 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
             nameTv = itemView.findViewById(R.id.addChatNameTv);
             statusTv = itemView.findViewById(R.id.addChatStatusTv);
         }
+    }
+
+    public void setUsers(List<User> users){
+        this.users = users;
+        notifyDataSetChanged();
     }
 }

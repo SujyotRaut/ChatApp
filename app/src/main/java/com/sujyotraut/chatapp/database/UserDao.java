@@ -15,7 +15,7 @@ import java.util.List;
 @Dao
 public interface UserDao {
 
-    @Query("SELECT * FROM users")
+    @Query("SELECT * FROM users ORDER BY name ASC")
     LiveData<List<User>> getAll();
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

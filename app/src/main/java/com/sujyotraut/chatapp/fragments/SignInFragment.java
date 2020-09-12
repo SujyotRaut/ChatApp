@@ -27,6 +27,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.progressindicator.ProgressIndicator;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
@@ -38,6 +39,7 @@ public class SignInFragment extends Fragment {
 
     private static final String TAG = "myTag";
     private TextInputLayout emailEditText, passEditText;
+    private ProgressIndicator progressIndicator;
     private Button signInBtn;
 
     public SignInFragment() {
@@ -53,6 +55,8 @@ public class SignInFragment extends Fragment {
         signInBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                progressIndicator.show();
+                signInBtn.setEnabled(false);
                 signIn();
             }
         });
@@ -73,11 +77,15 @@ public class SignInFragment extends Fragment {
                 public void onComplete(@NonNull Task<AuthResult> task) {
                     if (task.isSuccessful()){
                         Log.d(TAG, "onSuccess: clicked");
+                        progressIndicator.hide();
+                        signInBtn.setEnabled(true);
                         Intent intent = new Intent(getContext(), ChatsActivity.class);
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(intent);
                     }else {
                         Log.d(TAG, "onComplete: sign in failed");
+                        progressIndicator.hide();
+                        signInBtn.setEnabled(true);
                         Toast.makeText(getContext(), "Sign In Failed", Toast.LENGTH_SHORT).show();
                     }
                 }
@@ -159,6 +167,7 @@ public class SignInFragment extends Fragment {
         TextView forgotPassTV = view.findViewById(R.id.forgotPassTV);
         TextView signUpTV = view.findViewById(R.id.signUpTV);
 
+        progressIndicator = getActivity().findViewById(R.id.progressIndicator);
         signInBtn = view.findViewById(R.id.signBtn);
 
         SpannableString signUpString = new SpannableString(getString(R.string.sign_up_text));

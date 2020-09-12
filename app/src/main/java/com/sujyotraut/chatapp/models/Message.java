@@ -19,7 +19,7 @@ public class Message {
     private String conversationId;
     private String msgText, senderId;
     private MsgType msgType;
-    private Boolean seen;
+    private Boolean sent, seen;
 
     public Message(){
         //no argument constructor is required for getting message instance from firestore document snapshot
@@ -33,6 +33,7 @@ public class Message {
         this.timestamp = Timestamp.now();
         this.senderId = user.getUid();
         this.msgType = MsgType.TEXT;
+        this.sent = false;
         this.seen = false;
     }
 
@@ -75,6 +76,14 @@ public class Message {
 
     public void setSenderId(String senderId) {
         this.senderId = senderId;
+    }
+
+    public Boolean getSent() {
+        return sent;
+    }
+
+    public void setSent(Boolean sent) {
+        this.sent = sent;
     }
 
     public Boolean getSeen() {

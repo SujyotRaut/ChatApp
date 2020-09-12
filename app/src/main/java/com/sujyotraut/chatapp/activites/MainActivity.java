@@ -22,6 +22,7 @@ import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.progressindicator.ProgressIndicator;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -78,6 +79,9 @@ public class MainActivity extends AppCompatActivity {
 //        window.setStatusBarColor(ContextCompat.getColor(MainActivity.this,R.color.white));
 //        window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
 
+        ProgressIndicator progressIndicator = findViewById(R.id.progressIndicator);
+        progressIndicator.hide();
+
         FirebaseAuth auth = FirebaseAuth.getInstance();
         FirebaseUser user = auth.getCurrentUser();
 
@@ -115,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
 
 //        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
 ////        intent.addCategory(Intent.CATEGORY_OPENABLE);
-//        intent.setType("image/jpeg");
+//        intent.setType("default_profile/jpeg");
 //        startActivityForResult(intent, 111);
 
     }

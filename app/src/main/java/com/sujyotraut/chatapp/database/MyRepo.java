@@ -4,11 +4,13 @@ import android.app.Application;
 
 import androidx.lifecycle.LiveData;
 
+import com.google.firebase.Timestamp;
 import com.sujyotraut.chatapp.models.Chat;
 import com.sujyotraut.chatapp.models.Message;
 import com.sujyotraut.chatapp.models.User;
 
 import java.util.List;
+import java.util.concurrent.Callable;
 
 public class MyRepo {
 
@@ -29,6 +31,16 @@ public class MyRepo {
 
     public LiveData<List<Chat>> getAllChats() {
         return this.allChats;
+    }
+
+    public void updateChat(final String chatId, final String lastMsg,
+                           final Timestamp lastMsgTime, final int unseenMsgCount){
+        ChatAppRoomDatabase.databaseWriteExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                mChatDao.updateChat(chatId, lastMsg, lastMsgTime, unseenMsgCount);
+            }
+        });
     }
 
     public void insertChat(final Chat chat) {

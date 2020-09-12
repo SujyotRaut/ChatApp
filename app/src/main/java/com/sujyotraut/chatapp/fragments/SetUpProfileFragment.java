@@ -29,14 +29,11 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 import com.sujyotraut.chatapp.R;
 import com.sujyotraut.chatapp.activites.ChatsActivity;
 import com.sujyotraut.chatapp.activites.MainActivity;
-import com.sujyotraut.chatapp.interfaces.ImgResizeCompletionListener;
-import com.sujyotraut.chatapp.utils.ResizeImageTask;
+import com.sujyotraut.chatapp.interfaces.OnCompletionListener;
+import com.sujyotraut.chatapp.utils.CompressAndUploadProfile;
 
 public class SetUpProfileFragment extends Fragment {
 
@@ -59,14 +56,9 @@ public class SetUpProfileFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_set_up_profile, container, false);
 
-        Log.d(TAG, "onCreateView: ");
         initViews(view);
-        Log.d(TAG, "onCreateView: ");
 
-        final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         final FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-        ResizeImageTask imageTask = new ResizeImageTask(getContext(), profileImage);
 
         profileImageView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -81,49 +73,24 @@ public class SetUpProfileFragment extends Fragment {
         nextBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ResizeImageTask task = new ResizeImageTask(getContext(), profileImage);
-                task.addCompletionListener(new ImgResizeCompletionListener() {
-                    @Override
-                    public void onComplete(Uri resizedImg) {
-                        Log.d(TAG, "onComplete: image is resized");
-                        final String statusText = statusInputTextLayout.getEditText().getText().toString();
-                        Log.d(TAG, "onComplete: ");
-                        if (resizedImg != null){
-                            FirebaseStorage storage = FirebaseStorage.getInstance();
-                            StorageReference profilePicturesRef = storage.getReference("profilePictures");
-                            StorageReference currDpRef = profilePicturesRef.child(user.getUid()+".jpg");
-                            currDpRef.putFile(resizedImg).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
-                                @Override
-                                public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
-                                    if (task.isSuccessful()){
-                                        Log.d(TAG, "onComplete: upload dp successful");
-                                        String defaultStatus = getResources().getString(R.string.default_status);
-                                        String myStatus = statusInputTextLayout.getEditText().getText().toString();
-                                        String status = statusText.isEmpty() ? myStatus: defaultStatus;
-                                        DocumentReference currentUserRef = db.collection("users").document(user.getUid());
-                                        currentUserRef.update("status", status);
-                                        launchChatsActivity();
-                                    }else {
-                                        Log.d(TAG, "onComplete: upload dp failed");
-                                        Toast.makeText(getContext(), "Profile Update Failed", Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-                            });
-                        }else if(!statusText.isEmpty()){
-                            String status = statusInputTextLayout.getEditText().getText().toString();
-                            DocumentReference currentUserRef = db.collection("users").document(user.getUid());
-                            currentUserRef.update("status", status);
-                            launchChatsActivity();
-                        }else {
-                            String status = getResources().getString(R.string.default_status);
-                            DocumentReference currentUserRef = db.collection("users").document(user.getUid());
-                            currentUserRef.update("status", status);
-                            launchChatsActivity();
+                String status = statusInputTextLayout.getEditText().getText().toString();
+                if (!status.isEmpty()){
+                    FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                    DocumentReference userRef = db.collection("users").document(user.getUid());
+                    userRef.update("status", status).addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if (task.isSuccessful()){
+                                Toast.makeText(getContext(), "Status updated", Toast.LENGTH_SHORT).show();
+                                launchChatsActivity();
+                            }else {
+                                Toast.makeText(getContext(), "Status update failed", Toast.LENGTH_SHORT).show();
+                            }
                         }
-                    }
-                });
-
-                new Thread(task).start();
+                    });
+                }else {
+                    launchChatsActivity();
+                }
             }
         });
 
@@ -139,9 +106,9 @@ public class SetUpProfileFragment extends Fragment {
         profileImageView = view.findViewById(R.id.setProfileImageView);
         statusInputTextLayout = view.findViewById(R.id.statusTextField);
         nextBtn = view.findViewById(R.id.nextBtn);
-
         progressIndicator = view.findViewById(R.id.progressBar);
-        progressIndicator.setVisibility(View.INVISIBLE);
+        progressIndicator.hide();
+
 
         TextView textView = getActivity().findViewById(R.id.logoTextView);
         textView.setVisibility(View.GONE);
@@ -158,8 +125,6 @@ public class SetUpProfileFragment extends Fragment {
         int pxHeight = displayMetrics.heightPixels;
         int pxWidth = displayMetrics.widthPixels;
 
-        Log.d("myTag", "onCreateView: " + dpWidth);
-
         profileImageView = view.findViewById(R.id.setProfileImageView);
         ViewGroup.LayoutParams layoutParams1 = profileImageView.getLayoutParams();
         layoutParams1.height = pxWidth;
@@ -170,7 +135,24 @@ public class SetUpProfileFragment extends Fragment {
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if (resultCode == Activity.RESULT_OK){
             profileImage = data.getData();
-            profileImageView.setImageURI(profileImage);
+
+            nextBtn.setEnabled(false);
+            progressIndicator.show();
+            CompressAndUploadProfile task = new CompressAndUploadProfile(getContext(), profileImage);
+            task.addOnCompletionListener(new OnCompletionListener() {
+                @Override
+                public void onComplete(boolean isSuccessful) {
+                    if (isSuccessful){
+                        Toast.makeText(getContext(), "profile uploaded", Toast.LENGTH_SHORT).show();
+                        profileImageView.setImageURI(profileImage);
+                    }else {
+                        Toast.makeText(getContext(), "Upload profile failed", Toast.LENGTH_SHORT).show();
+                    }
+                    progressIndicator.hide();
+                    nextBtn.setEnabled(true);
+                }
+            });
+            new Thread(task).start();
         }
     }
 }

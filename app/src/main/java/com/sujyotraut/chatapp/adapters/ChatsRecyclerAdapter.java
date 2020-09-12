@@ -2,6 +2,8 @@ package com.sujyotraut.chatapp.adapters;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.icu.text.RelativeDateTimeFormatter;
 import android.net.Uri;
 import android.util.Log;
@@ -26,6 +28,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
@@ -34,12 +37,11 @@ import de.hdodenhof.circleimageview.CircleImageView;
 public class ChatsRecyclerAdapter extends RecyclerView.Adapter<ChatsRecyclerAdapter.ChatsViewHolder> {
 
     private Context context;
-    private List<Chat> chatModelList;
-    private View.OnClickListener mClickListener;
+    private List<Chat> chats;
 
-    public ChatsRecyclerAdapter(Context context, List<Chat> chatModelList){
+    public ChatsRecyclerAdapter(Context context){
         this.context = context;
-        this.chatModelList = chatModelList;
+        this.chats = new ArrayList<>();
     }
 
     @NonNull
@@ -56,14 +58,15 @@ public class ChatsRecyclerAdapter extends RecyclerView.Adapter<ChatsRecyclerAdap
     public void onBindViewHolder(@NonNull ChatsViewHolder holder, int position) {
         final String chatId, name, lastMsg;
         Timestamp lastMsgTimestamp;
-        Uri profilePicture;
         int unseenMsgCount;
 
-        chatId = chatModelList.get(position).getChatId();
-        name = chatModelList.get(position).getChatName();
-        lastMsg = chatModelList.get(position).getLastMsg();
-        lastMsgTimestamp = chatModelList.get(position).getLastMsgTime();
-        unseenMsgCount = chatModelList.get(position).getUnseenMsgCount();
+        Chat chat = chats.get(position);
+
+        chatId = chat.getChatId();
+        name = chat.getChatName();
+        lastMsg = chat.getLastMsg();
+        lastMsgTimestamp = chat.getLastMsgTime();
+        unseenMsgCount = chat.getUnseenMsgCount();
 
         DateFormat dateFormat = new SimpleDateFormat("hh:mm a");
         DateFormat dateFormat1 = new SimpleDateFormat("DD/MM/YY");
@@ -88,7 +91,10 @@ public class ChatsRecyclerAdapter extends RecyclerView.Adapter<ChatsRecyclerAdap
 
         File profileImage = new File(context.getExternalFilesDir("profilePictures"), chatId+".jpg");
         if (profileImage.exists()){
-            holder.profileImageView.setImageURI(Uri.fromFile(profileImage));
+            Bitmap bitmap = BitmapFactory.decodeFile(profileImage.getAbsolutePath());
+            holder.profileImageView.setImageBitmap(bitmap);
+        }else {
+            holder.profileImageView.setImageResource(R.drawable.default_profile);
         }
 
         holder.itemView.setOnClickListener(new View.OnClickListener() {
@@ -105,7 +111,7 @@ public class ChatsRecyclerAdapter extends RecyclerView.Adapter<ChatsRecyclerAdap
 
     @Override
     public int getItemCount() {
-        return chatModelList.size();
+        return chats.size();
     }
 
     public static class ChatsViewHolder extends RecyclerView.ViewHolder {
@@ -121,5 +127,10 @@ public class ChatsRecyclerAdapter extends RecyclerView.Adapter<ChatsRecyclerAdap
             unseenMsgCountTv = itemView.findViewById(R.id.unseenMsgCountTv);
             profileImageView = itemView.findViewById(R.id.chatProfileImageView);
         }
+    }
+
+    public void setChats(List<Chat> chats){
+        this.chats = chats;
+        notifyDataSetChanged();
     }
 }
