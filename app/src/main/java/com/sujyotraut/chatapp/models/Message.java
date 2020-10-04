@@ -33,7 +33,7 @@ public class Message {
         this.timestamp = Timestamp.now();
         this.senderId = user.getUid();
         this.msgType = MsgType.TEXT;
-        this.sent = false;
+        this.sent = true;
         this.seen = false;
     }
 

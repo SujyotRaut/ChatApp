@@ -31,6 +31,7 @@ import java.time.format.DateTimeFormatterBuilder;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -56,40 +57,34 @@ public class ChatsRecyclerAdapter extends RecyclerView.Adapter<ChatsRecyclerAdap
 
     @Override
     public void onBindViewHolder(@NonNull ChatsViewHolder holder, int position) {
-        final String chatId, name, lastMsg;
-        Timestamp lastMsgTimestamp;
-        int unseenMsgCount;
 
-        Chat chat = chats.get(position);
+        final Chat chat = chats.get(position);
 
-        chatId = chat.getChatId();
-        name = chat.getChatName();
-        lastMsg = chat.getLastMsg();
-        lastMsgTimestamp = chat.getLastMsgTime();
-        unseenMsgCount = chat.getUnseenMsgCount();
+        Calendar lastMsgTimestamp;
+        lastMsgTimestamp = Calendar.getInstance();
+        lastMsgTimestamp.setTime(chat.getLastMsgTime().toDate());
 
-        DateFormat dateFormat = new SimpleDateFormat("hh:mm a");
-        DateFormat dateFormat1 = new SimpleDateFormat("DD/MM/YY");
-        int diff = (int) (Timestamp.now().getSeconds() - lastMsgTimestamp.getSeconds());
-        int diffInHours = diff / 3600;
+        DateFormat timeFormat = new SimpleDateFormat("hh:mm a", Locale.ENGLISH);
+        DateFormat dateFormat = new SimpleDateFormat("dd/MM/YY", Locale.ENGLISH);
+        int diff = (int) (Calendar.getInstance().getTimeInMillis() - lastMsgTimestamp.getTimeInMillis());
 
         String lastMsgTime = "";
-        if (diff < 60){
+        if (diff < 60000){
             lastMsgTime = "just now";
-        }else if (diffInHours < 24){
-            lastMsgTime = dateFormat.format(lastMsgTimestamp.toDate());
-        }else if (diffInHours < 48){
+        }else if (lastMsgTimestamp.get(Calendar.DAY_OF_YEAR) == Calendar.getInstance().get(Calendar.DAY_OF_YEAR)){
+            lastMsgTime = timeFormat.format(lastMsgTimestamp.getTime());
+        }else if (lastMsgTimestamp.get(Calendar.DAY_OF_YEAR) == (Calendar.getInstance().get(Calendar.DAY_OF_YEAR) - 1)){
             lastMsgTime = "yesterday";
         }else {
-            lastMsgTime = dateFormat1.format(lastMsgTimestamp.toDate());
+            lastMsgTime = dateFormat.format(lastMsgTimestamp.getTime());
         }
 
-        holder.nameTv.setText(name);
-        holder.lastMsgTv.setText(lastMsg);
+        holder.nameTv.setText(chat.getChatName());
+        holder.lastMsgTv.setText(chat.getLastMsg());
         holder.lastMsgTimeTv.setText(lastMsgTime);
-        holder.unseenMsgCountTv.setText(String.valueOf(unseenMsgCount));
+        holder.unseenMsgCountTv.setText(String.valueOf(chat.getUnseenMsgCount()));
 
-        File profileImage = new File(context.getExternalFilesDir("profilePictures"), chatId+".jpg");
+        File profileImage = new File(context.getExternalFilesDir("profilePictures"),chat.getChatId()+".jpg");
         if (profileImage.exists()){
             Bitmap bitmap = BitmapFactory.decodeFile(profileImage.getAbsolutePath());
             holder.profileImageView.setImageBitmap(bitmap);
@@ -101,8 +96,8 @@ public class ChatsRecyclerAdapter extends RecyclerView.Adapter<ChatsRecyclerAdap
             @Override
             public void onClick(View v) {
                 Intent intent  = new Intent(context, ConversationActivity.class);
-                intent.putExtra("chatId", chatId);
-                intent.putExtra("name", name);
+                intent.putExtra("chatId", chat.getChatId());
+                intent.putExtra("name", chat.getChatName());
                 intent.putExtra("status", "status");
                 context.startActivity(intent);
             }

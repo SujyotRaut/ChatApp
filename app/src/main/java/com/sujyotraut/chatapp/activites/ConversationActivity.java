@@ -17,6 +17,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -64,35 +66,21 @@ public class ConversationActivity extends AppCompatActivity {
 
         initViews();
 
+        //updating last msg info
         String chatId = getIntent().getStringExtra("chatId");
         String conversationId = ChatsActivity.getConversationId(chatId);
+        CollectionReference conversationsRef = db.collection("conversations");
+        DocumentReference conversationRef = conversationsRef.document(conversationId);
+        conversationRef.update("unseenMsgCount"+user.getUid(), 0);
+
         myRepo.getAllMessages(conversationId).observe(ConversationActivity.this, new Observer<List<Message>>() {
             @Override
             public void onChanged(List<Message> messages) {
                 adapter.setMessages(messages);
-                messagesRecyclerView.smoothScrollToPosition(messages.size()-1);
-
-                String chatId = getIntent().getStringExtra("chatId");
-                String conversationId = ChatsActivity.getConversationId(chatId);
-                CollectionReference conversationsRef = db.collection("conversations");
-                DocumentReference conversationRef = conversationsRef.document(conversationId);
-                conversationRef.update("unseenMsgCount"+user.getUid(), 0);
-
-                CollectionReference messagesRef = conversationsRef.document(conversationId).collection("messages");
-                messagesRef.whereEqualTo("senderId", chatId)
-                        .addSnapshotListener(ConversationActivity.this, new EventListener<QuerySnapshot>() {
-                            @Override
-                            public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
-                                if (error == null){
-                                    List<DocumentChange> changes = value.getDocumentChanges();
-                                    if (!changes.isEmpty()){
-                                        for (DocumentChange change: changes){
-                                            change.getDocument().getReference().update("seen", true);
-                                        }
-                                    }
-                                }
-                            }
-                        });
+                int messagesCount = messages.size();
+                if (messagesCount-1 > 4){
+                    adapter.scrollToBottom(messagesRecyclerView);
+                }
             }
         });
 
@@ -101,18 +89,32 @@ public class ConversationActivity extends AppCompatActivity {
     }
 
     private void updateMessages() {
-        String chatId = getIntent().getStringExtra("chatId");
+        final String chatId = getIntent().getStringExtra("chatId");
         String conversationId = ChatsActivity.getConversationId(chatId);
         CollectionReference conversationsRef = db.collection("conversations");
         CollectionReference messagesRef = conversationsRef.document(conversationId).collection("messages");
-        messagesRef.addSnapshotListener(new EventListener<QuerySnapshot>() {
+        messagesRef.addSnapshotListener(ConversationActivity.this, new EventListener<QuerySnapshot>() {
             @Override
             public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
-                List<DocumentChange> changes = value.getDocumentChanges();
-                if (!changes.isEmpty()){
+                if (error != null){
+                    Log.d(TAG, "updateMessages: Listening Failed");
+                    return;
+                }
+
+                if (value != null && !value.isEmpty()){
+                    List<DocumentChange> changes = value.getDocumentChanges();
                     for (DocumentChange change: changes){
-                        Message message = change.getDocument().toObject(Message.class);
-                        myRepo.insertMessage(message);
+                        QueryDocumentSnapshot documentSnapshot = change.getDocument();
+                        Message message = documentSnapshot.toObject(Message.class);
+                        if (documentSnapshot.getMetadata().hasPendingWrites()){
+                            message.setSent(false);
+                            myRepo.insertMessage(message);
+                        }else if (!documentSnapshot.getString("senderId").equals(user.getUid())){
+                            documentSnapshot.getReference().update("seen", true);
+                            myRepo.insertMessage(message);
+                        }else {
+                            myRepo.insertMessage(message);
+                        }
                     }
                 }
             }
@@ -121,7 +123,7 @@ public class ConversationActivity extends AppCompatActivity {
 
     public void sendMsg(View view) {
         String msgText = msgEditText.getText().toString();
-        if (!msgText.isEmpty()){
+        if (!msgText.trim().isEmpty()){
 
             //initializing batch
             WriteBatch batch = db.batch();
@@ -137,7 +139,6 @@ public class ConversationActivity extends AppCompatActivity {
             msgId = msgRef.getId();
 
             final Message msg = new Message(msgId, conversationId, msgText);
-            msg.setSent(true);
 
             //storing last msg values to a map
             Map<String, Object> map = new HashMap<>();
@@ -155,21 +156,24 @@ public class ConversationActivity extends AppCompatActivity {
             batch.update(chatRef, "chats", FieldValue.arrayUnion(user.getUid()));
 
             //committing atomic batch write operation
-            batch.commit().addOnCompleteListener(new OnCompleteListener<Void>() {
+            batch.commit().addOnSuccessListener(new OnSuccessListener<Void>() {
                 @Override
-                public void onComplete(@NonNull Task<Void> task) {
-                    if (task.isSuccessful()){
-                        Log.d(TAG, "onComplete: msg sent");
-                    } else {
-                        Log.d(TAG, "onComplete: msg not sent");
-                    }
+                public void onSuccess(Void aVoid) {
+                    Log.d(TAG, "onComplete: msg sent");
+                    myRepo.insertMessage(msg);
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Log.d(TAG, "onComplete: msg not sent");
+                    Log.d(TAG, "error: " + e);
                 }
             });
 
-            myRepo.insertMessage(msg);
             msgEditText.getText().clear();
-            InputMethodManager imm = ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE));
-            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+            adapter.smoothScrollToBottom(messagesRecyclerView);
+//            InputMethodManager imm = ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE));
+//            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
     }
 

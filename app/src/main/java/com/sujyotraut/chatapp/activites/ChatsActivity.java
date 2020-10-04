@@ -43,6 +43,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Calendar;
 import java.util.List;
 
 public class ChatsActivity extends AppCompatActivity {
@@ -62,8 +63,6 @@ public class ChatsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chats);
-
-        Log.d(TAG, "onCreate: chat activity");
 
         user = FirebaseAuth.getInstance().getCurrentUser();
 
@@ -88,8 +87,6 @@ public class ChatsActivity extends AppCompatActivity {
         currentUserRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
             @Override
             public void onEvent(@Nullable DocumentSnapshot value, @Nullable FirebaseFirestoreException error) {
-                Log.d(TAG, "onEvent: user document changed");
-                Log.d(TAG, "error: " + error);
                 if (error == null){
                     List<String> chatIds = ((List<String>) value.get("chats"));
                     if (chatIds != null){
@@ -154,11 +151,12 @@ public class ChatsActivity extends AppCompatActivity {
         }).addOnCompleteListener(new OnCompleteListener<Chat>() {
             @Override
             public void onComplete(@NonNull Task<Chat> task) {
-                if (task.isSuccessful()){
-                    Log.d(TAG, "chat updated: " + task.getResult().getChatName());
-                    myRepo.insertChat(task.getResult());
-                }else {
-                    Log.d(TAG, "chat update failed: " + task.getResult().getChatName());
+                if (task.getException() == null){
+                    if (task.isSuccessful()){
+                        myRepo.insertChat(task.getResult());
+                    }else {
+                        Log.d(TAG, "chat update failed: " + task.getResult().getChatName());
+                    }
                 }
             }
         });
@@ -185,17 +183,18 @@ public class ChatsActivity extends AppCompatActivity {
         conversationRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
             @Override
             public void onEvent(@Nullable DocumentSnapshot value, @Nullable FirebaseFirestoreException error) {
-                Log.d(TAG, "msg updated");
-                String lastMsg = value.getString("lastMsg");
-                Timestamp lastMsgTime = value.getTimestamp("lastMsgTime");
-                Long l = value.getLong("unseenMsgCount"+user.getUid());
-                int unseenMsgCount = 0;
-                if (l != null){
-                    unseenMsgCount = l.intValue();
-                }
+                if (error == null){
+                    String lastMsg = value.getString("lastMsg");
+                    Timestamp lastMsgTime = value.getTimestamp("lastMsgTime");
+                    Long l = value.getLong("unseenMsgCount"+user.getUid());
+                    int unseenMsgCount = 0;
+                    if (l != null){
+                        unseenMsgCount = l.intValue();
+                    }
 
-                myRepo.updateChat(chatId, lastMsg, lastMsgTime, unseenMsgCount);
-                adapter.notifyDataSetChanged();
+                    myRepo.updateChat(chatId, lastMsg, lastMsgTime, unseenMsgCount);
+                    adapter.notifyDataSetChanged();
+                }
             }
         });
 

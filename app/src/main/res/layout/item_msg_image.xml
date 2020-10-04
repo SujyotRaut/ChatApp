@@ -1,42 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<LinearLayout
+    android:id="@+id/ll_msg_image_root"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="wrap_content"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="8dp"
-    android:background="@drawable/bg_msg"
+    android:paddingVertical="4dp"
     android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/msgTextView"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/csl_msg_image_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello Bro! How are u ?"
-        android:textSize="18sp"
-        android:textColor="@color/black"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        android:padding="8dp"
+        android:background="@drawable/bg_msg">
 
-    <TextView
-        android:id="@+id/timeTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="4dp"
-        android:text="5 am"
-        android:textSize="12sp"
-        app:layout_constraintEnd_toStartOf="@id/tickImageView"
-        app:layout_constraintBottom_toBottomOf="@id/tickImageView" />
+        <ImageView
+            android:id="@+id/iv_msg_image_img"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/default_profile"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
 
-    <ImageView
-        android:id="@+id/tickImageView"
-        android:layout_width="16sp"
-        android:layout_height="16sp"
-        android:layout_marginTop="2dp"
-        android:src="@drawable/ic_double_tick_24px"
-        app:layout_constraintTop_toBottomOf="@id/msgTextView"
-        app:layout_constraintEnd_toEndOf="parent" />
+        <TextView
+            android:id="@+id/tv_msg_image_msg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="4dp"
+            android:text="Here is my image"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/iv_msg_image_img" />
+
+        <TextView
+            android:id="@+id/tv_msg_image_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            android:text="7:65 am"
+            android:textSize="12sp"
+            app:layout_constraintTop_toBottomOf="@id/tv_msg_image_msg"
+            app:layout_constraintEnd_toStartOf="@id/iv_msg_image_sent"/>
+
+        <ImageView
+            android:id="@+id/iv_msg_image_sent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="@id/tv_msg_image_time"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

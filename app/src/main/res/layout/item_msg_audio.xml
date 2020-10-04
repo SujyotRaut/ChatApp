@@ -1,42 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<LinearLayout
+    android:id="@+id/ll_msg_audio_root"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="wrap_content"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="8dp"
-    android:background="@drawable/bg_msg"
+    android:paddingVertical="4dp"
     android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/msgTextView"
-        android:layout_width="wrap_content"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/csl_msg_audio_container"
+        android:layout_width="300dp"
         android:layout_height="wrap_content"
-        android:text="Hello Bro! How are u ?"
-        android:textSize="18sp"
-        android:textColor="@color/black"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        android:padding="8dp"
+        android:background="@drawable/bg_msg">
 
-    <TextView
-        android:id="@+id/timeTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="4dp"
-        android:text="5 am"
-        android:textSize="12sp"
-        app:layout_constraintEnd_toStartOf="@id/tickImageView"
-        app:layout_constraintBottom_toBottomOf="@id/tickImageView" />
+        <Button
+            android:id="@+id/btn_msg_audio_play"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:background="@drawable/ic_play_24px"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
 
-    <ImageView
-        android:id="@+id/tickImageView"
-        android:layout_width="16sp"
-        android:layout_height="16sp"
-        android:layout_marginTop="2dp"
-        android:src="@drawable/ic_double_tick_24px"
-        app:layout_constraintTop_toBottomOf="@id/msgTextView"
-        app:layout_constraintEnd_toEndOf="parent" />
+        <SeekBar
+            android:id="@+id/sb_msg_audio"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="@id/btn_msg_audio_play"
+            app:layout_constraintBottom_toBottomOf="@id/btn_msg_audio_play"
+            app:layout_constraintStart_toEndOf="@id/btn_msg_audio_play"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+        <TextView
+            android:id="@+id/tv_msg_audio_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            android:text="7:65 am"
+            android:textSize="12sp"
+            app:layout_constraintTop_toBottomOf="@id/btn_msg_audio_play"
+            app:layout_constraintEnd_toStartOf="@id/iv_msg_audio_sent"/>
+
+        <ImageView
+            android:id="@+id/iv_msg_audio_sent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="@id/tv_msg_audio_time"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

@@ -87,12 +87,10 @@ public class MainActivity extends AppCompatActivity {
 
         if (user != null){ //check if user is signed in
             //launch chats activity
-            Log.d(TAG, "onCreate: user is not null");
             Intent intent = new Intent(MainActivity.this, ChatsActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
             finish();
-            Log.d(TAG, "onCreate: main activity is finished");
 
         } else { //user is not signed in
             //launch sign in fragment
